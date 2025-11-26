@@ -36,7 +36,9 @@ class AssetController extends Controller
     public function create()
     {
         return Inertia::render('Assets/Create', [
-            'categories' => Category::all()
+            'categories' => Category::all(),
+            // On ajoute la liste des utilisateurs pour le select
+            'users' => \App\Models\User::orderBy('name')->get(['id', 'name'])
         ]);
     }
 
@@ -48,10 +50,34 @@ class AssetController extends Controller
             'inventory_code' => 'required|unique:assets',
             'category_id' => 'required|exists:categories,id',
             'status' => 'required|in:available,assigned,broken,repair',
-            'specs' => 'nullable|string'
+            'specs' => 'nullable|string',
+            // Validation conditionnelle : user_id est requis SI le statut est 'assigned'
+            'user_id' => 'required_if:status,assigned|nullable|exists:users,id',
         ]);
 
-        Asset::create($validated);
+        // 1. Création du matériel
+        $asset = Asset::create([
+            'name' => $validated['name'],
+            'serial_number' => $validated['serial_number'],
+            'inventory_code' => $validated['inventory_code'],
+            'category_id' => $validated['category_id'],
+            'status' => $validated['status'],
+            'specs' => $validated['specs'],
+            // Si assigné, on lie directement, sinon null
+            'user_id' => $validated['status'] === 'assigned' ? $validated['user_id'] : null,
+        ]);
+
+        // 2. Si on l'a assigné immédiatement, on crée l'historique (AssetAssignment)
+        // pour garder une trace propre dans la Timeline
+        if ($validated['status'] === 'assigned' && $request->user_id) {
+            \App\Models\AssetAssignment::create([
+                'asset_id' => $asset->id,
+                'user_id' => $validated['user_id'],
+                'admin_id' => auth()->id(),
+                'assigned_at' => now(), // Date du jour
+                'comments' => 'Assignation initiale à la création du matériel.',
+            ]);
+        }
 
         return redirect()->route('assets.index')->with('success', 'Matériel ajouté avec succès.');
     }
