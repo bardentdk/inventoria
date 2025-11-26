@@ -41,6 +41,8 @@ Route::middleware('auth')->group(function () {
     // 2. Gestion de l'Inventaire (Assets)
     // Route spéciale pour l'autocomplete (Recherche JSON pour les selecteurs)
     Route::get('assets/search', [AssetController::class, 'search'])->name('assets.search');
+    // Export Excel/CSV
+    Route::get('assets/export', [AssetController::class, 'export'])->name('assets.export');
     Route::resource('assets', AssetController::class);
 
     // 3. Gestion des Tickets (Support)
@@ -64,6 +66,5 @@ Route::middleware('auth')->group(function () {
     #Création des catégories
     Route::post('api/categories', [CategoryController::class, 'storeApi'])->name('categories.store.api');
 
-    // Export Excel/CSV
-    Route::get('assets/export', [AssetController::class, 'export'])->name('assets.export');
+
 });
