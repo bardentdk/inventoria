@@ -43,7 +43,12 @@ class TicketController extends Controller
 
     public function create()
     {
-        return Inertia::render('Tickets/Create');
+        return Inertia::render('Tickets/Create', [
+            // On récupère le matériel assigné à l'utilisateur connecté
+            'my_assets' => \App\Models\Asset::where('user_id', auth()->id())
+                ->select('id', 'name', 'serial_number', 'inventory_code')
+                ->get()
+        ]);
     }
 
     public function store(Request $request)
