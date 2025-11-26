@@ -71,11 +71,42 @@ class AssetController extends Controller
     }
     public function show(Asset $asset)
     {
-        // On charge : la catégorie, l'utilisateur actuel, et les tickets (avec leur auteur)
-        $asset->load(['category', 'user', 'tickets.user']);
+        $asset->load(['category', 'user', 'tickets.user', 'assignments.user', 'assignments.admin']);
 
         return Inertia::render('Assets/Show', [
-            'asset' => $asset
+            'asset' => $asset,
+            // On envoie la liste des users pour le selecteur d'attribution
+            'users' => \App\Models\User::orderBy('name')->get(['id', 'name'])
         ]);
+    }
+    public function edit(Asset $asset)
+    {
+        return Inertia::render('Assets/Edit', [
+            'asset' => $asset,
+            'categories' => Category::all() // On a besoin de la liste pour le menu déroulant
+        ]);
+    }
+
+    public function update(Request $request, Asset $asset)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            // On ignore l'ID actuel pour la validation unique
+            'serial_number' => 'required|unique:assets,serial_number,' . $asset->id,
+            'inventory_code' => 'required|unique:assets,inventory_code,' . $asset->id,
+            'category_id' => 'required|exists:categories,id',
+            'status' => 'required|in:available,assigned,broken,repair',
+            'specs' => 'nullable|string'
+        ]);
+
+        $asset->update($validated);
+
+        return redirect()->route('assets.index')->with('success', 'Matériel mis à jour.');
+    }
+
+    public function destroy(Asset $asset)
+    {
+        $asset->delete();
+        return redirect()->route('assets.index')->with('success', 'Matériel supprimé de l\'inventaire.');
     }
 }

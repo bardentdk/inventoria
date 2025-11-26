@@ -2,7 +2,7 @@
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
-import { MagnifyingGlassIcon, PlusIcon, PencilSquareIcon } from '@heroicons/vue/24/outline';
+import { MagnifyingGlassIcon, PlusIcon, PencilSquareIcon, EyeIcon } from '@heroicons/vue/24/outline';
 import debounce from 'lodash/debounce';
 
 const props = defineProps({
@@ -17,7 +17,6 @@ watch(search, debounce((value) => {
     router.get(route('assets.index'), { search: value }, { preserveState: true, replace: true });
 }, 300));
 
-// Helper pour les couleurs de badges
 const getStatusColor = (status) => {
     const colors = {
         available: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
@@ -71,21 +70,23 @@ const getStatusColor = (status) => {
                     <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                         <tr v-for="asset in assets.data" :key="asset.id" class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-slate-900 dark:text-white">{{ asset.name }}</div>
+                                <Link :href="route('assets.show', asset.id)" class="text-sm font-medium text-slate-900 dark:text-white hover:text-blue-600 transition-colors block">
+                                    {{ asset.name }}
+                                </Link>
+                                <div v-if="asset.user" class="text-xs text-blue-500 mt-0.5 flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                                    Assigné à {{ asset.user.name }}
+                                </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-slate-500">S/N: {{ asset.serial_number }}</div>
-                                <div class="text-xs text-slate-400">Ref: {{ asset.inventory_code }}</div>
+                                <Link :href="route('assets.show', asset.id)" class="group block cursor-pointer">
+                                    <div class="text-sm text-slate-500 group-hover:text-blue-600 transition-colors">S/N: {{ asset.serial_number }}</div>
+                                    <div class="text-xs text-slate-400">Ref: {{ asset.inventory_code }}</div>
+                                </Link>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300">
-                                    <div class="text-sm font-medium text-slate-900 dark:text-white">{{ asset.name }}</div>
-
-                                    <div class="text-sm font-medium text-slate-900 dark:text-white hover:text-blue-600 transition-colors">
-                                        <Link :href="route('assets.show', asset.id)">
-                                            {{ asset.name }}
-                                        </Link>
-                                    </div>
+                                <span class="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
+                                    {{ asset.category.name }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -94,9 +95,15 @@ const getStatusColor = (status) => {
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <Link :href="route('assets.edit', asset.id)" class="text-blue-600 hover:text-blue-900 dark:hover:text-blue-400">
-                                    <PencilSquareIcon class="w-5 h-5" />
-                                </Link>
+                                <div class="flex items-center justify-end gap-3">
+                                    <Link :href="route('assets.show', asset.id)" class="text-slate-400 hover:text-blue-600 transition-colors" title="Voir la fiche">
+                                        <EyeIcon class="w-5 h-5" />
+                                    </Link>
+
+                                    <Link :href="route('assets.edit', asset.id)" class="text-slate-400 hover:text-orange-600 transition-colors" title="Modifier">
+                                        <PencilSquareIcon class="w-5 h-5" />
+                                    </Link>
+                                </div>
                             </td>
                         </tr>
                         <tr v-if="assets.data.length === 0">
@@ -110,7 +117,9 @@ const getStatusColor = (status) => {
 
             <div class="bg-slate-50 dark:bg-slate-900/50 px-6 py-3 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
                 <div class="flex-1 flex justify-between sm:hidden">
-                    </div>
+                    <Link v-if="assets.prev_page_url" :href="assets.prev_page_url" class="relative inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Précédent</Link>
+                    <Link v-if="assets.next_page_url" :href="assets.next_page_url" class="relative ml-3 inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Suivant</Link>
+                </div>
                 <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                     <div>
                         <p class="text-sm text-slate-700 dark:text-slate-400">

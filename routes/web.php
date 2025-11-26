@@ -57,4 +57,8 @@ Route::middleware('auth')->group(function () {
     // On pourrait ajouter un middleware 'can:admin' ici plus tard pour blinder
     Route::resource('users', UserController::class);
 
+    // Gestion des Attributions
+    Route::post('assets/{asset}/assign', [App\Http\Controllers\AssetAssignmentController::class, 'store'])->name('assets.assign');
+    Route::post('assets/{asset}/return', [App\Http\Controllers\AssetAssignmentController::class, 'markAsReturned'])->name('assets.return');
+
 });

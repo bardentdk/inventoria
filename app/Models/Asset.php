@@ -28,4 +28,20 @@ class Asset extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function tickets()
+    {
+        return $this->hasMany(Ticket::class)->latest(); // On les trie par défaut
+    }
+    
+    public function assignments()
+    {
+        return $this->hasMany(AssetAssignment::class)->latest();
+    }
+
+    // Récupère l'attribution active (s'il y en a une)
+    public function currentAssignment()
+    {
+        return $this->hasOne(AssetAssignment::class)->whereNull('returned_at')->latest();
+    }
 }

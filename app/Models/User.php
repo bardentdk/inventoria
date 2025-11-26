@@ -9,6 +9,7 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
+    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
     /**
@@ -20,6 +21,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',       // Important pour ton admin
+        'department', // Optionnel
     ];
 
     /**
@@ -43,5 +46,32 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    // --- RELATIONS AJOUTÉES POUR NEXA ---
+
+    /**
+     * Un utilisateur a créé plusieurs tickets.
+     * C'est cette méthode qui manquait et causait ton erreur.
+     */
+    public function tickets()
+    {
+        return $this->hasMany(Ticket::class);
+    }
+
+    /**
+     * Un utilisateur peut avoir plusieurs matériels assignés.
+     */
+    public function assets()
+    {
+        return $this->hasMany(Asset::class);
+    }
+
+    /**
+     * Un utilisateur a écrit plusieurs messages dans les chats.
+     */
+    public function messages()
+    {
+        return $this->hasMany(TicketMessage::class);
     }
 }
