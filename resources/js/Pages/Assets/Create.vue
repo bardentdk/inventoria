@@ -1,19 +1,56 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Head, useForm, Link } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import { PlusIcon, XMarkIcon } from '@heroicons/vue/24/outline';
+import axios from 'axios'; // Standard dans Laravel
 
 const props = defineProps({
-    categories: Array, // Reçu depuis le Controller
+    categories: Array,
 });
+
+// On rend la liste réactive pour pouvoir ajouter dedans sans recharger
+const categoriesList = ref(props.categories);
 
 const form = useForm({
     name: '',
     serial_number: '',
     inventory_code: '',
     category_id: '',
-    status: 'available', // Valeur par défaut
+    status: 'available',
     specs: '',
 });
+
+// --- GESTION AJOUT RAPIDE CATÉGORIE ---
+const showCatModal = ref(false);
+const newCatName = ref('');
+const isCreatingCat = ref(false);
+
+const createCategory = async () => {
+    if (!newCatName.value) return;
+
+    isCreatingCat.value = true;
+    try {
+        // Appel AJAX vers notre nouvelle route
+        const response = await axios.post(route('categories.store.api'), {
+            name: newCatName.value
+        });
+
+        // 1. On ajoute la nouvelle catégorie à la liste
+        categoriesList.value.push(response.data);
+
+        // 2. On la sélectionne automatiquement
+        form.category_id = response.data.id;
+
+        // 3. On ferme la modale
+        newCatName.value = '';
+        showCatModal.value = false;
+    } catch (error) {
+        alert("Erreur : Cette catégorie existe peut-être déjà.");
+    } finally {
+        isCreatingCat.value = false;
+    }
+};
 
 const submit = () => {
     form.post(route('assets.store'));
@@ -24,6 +61,29 @@ const submit = () => {
     <Head title="Ajouter un équipement" />
 
     <AppLayout>
+        <div v-if="showCatModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-sm w-full p-6 border border-slate-200 dark:border-slate-700 relative">
+                <button @click="showCatModal = false" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                    <XMarkIcon class="w-5 h-5" />
+                </button>
+
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Nouvelle Catégorie</h3>
+
+                <form @submit.prevent="createCategory">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nom</label>
+                        <input type="text" v-model="newCatName" class="block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white focus:ring-blue-600" placeholder="Ex: Tablette, Projecteur..." autoFocus />
+                    </div>
+                    <div class="flex justify-end gap-2">
+                        <button type="button" @click="showCatModal = false" class="px-4 py-2 text-sm text-slate-500 hover:text-slate-700">Annuler</button>
+                        <button type="submit" :disabled="!newCatName || isCreatingCat" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-500 disabled:opacity-50">
+                            {{ isCreatingCat ? 'Création...' : 'Créer & Sélectionner' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <div class="max-w-3xl mx-auto">
             <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-6">Ajouter un nouveau matériel</h2>
 
@@ -39,10 +99,16 @@ const submit = () => {
 
                         <div>
                             <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Catégorie</label>
-                            <select v-model="form.category_id" class="mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600" required>
-                                <option value="" disabled>Choisir...</option>
-                                <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
-                            </select>
+                            <div class="flex gap-2 mt-2">
+                                <select v-model="form.category_id" class="block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600" required>
+                                    <option value="" disabled>Choisir...</option>
+                                    <option v-for="cat in categoriesList" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+                                </select>
+
+                                <button type="button" @click="showCatModal = true" class="flex-shrink-0 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-200 p-2.5 rounded-xl border border-slate-300 dark:border-slate-600 transition-colors" title="Ajouter une catégorie">
+                                    <PlusIcon class="w-6 h-6" />
+                                </button>
+                            </div>
                             <div v-if="form.errors.category_id" class="text-red-500 text-xs mt-1">{{ form.errors.category_id }}</div>
                         </div>
                     </div>

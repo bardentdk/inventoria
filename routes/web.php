@@ -1,12 +1,13 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\TicketController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\TicketMessageController;
-use App\Http\Controllers\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -60,5 +61,6 @@ Route::middleware('auth')->group(function () {
     // Gestion des Attributions
     Route::post('assets/{asset}/assign', [App\Http\Controllers\AssetAssignmentController::class, 'store'])->name('assets.assign');
     Route::post('assets/{asset}/return', [App\Http\Controllers\AssetAssignmentController::class, 'markAsReturned'])->name('assets.return');
-
+    #Création des catégories
+    Route::post('api/categories', [CategoryController::class, 'storeApi'])->name('categories.store.api');
 });
