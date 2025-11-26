@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+@theme {
+  /* Définition de la palette 2025 "Nexa" - Dark/Clean */
+  --color-primary: #3b82f6;
+  --color-secondary: #64748b;
+  --color-accent: #8b5cf6;
+  --font-sans: "Inter", system-ui, sans-serif;
+}
