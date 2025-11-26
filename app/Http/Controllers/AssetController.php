@@ -129,7 +129,60 @@ class AssetController extends Controller
 
         return redirect()->route('assets.index')->with('success', 'Matériel mis à jour.');
     }
+    public function export(Request $request)
+    {
+        $filename = 'inventaire-nexa-' . date('Y-m-d-H-i') . '.csv';
 
+        // On reprend les mêmes filtres que l'index pour exporter ce qu'on voit (ou tout si pas de filtre)
+        $query = Asset::query()->with(['category', 'user']);
+
+        if ($request->search) {
+            $query->where(function($q) use ($request) {
+                $q->where('name', 'like', '%'.$request->search.'%')
+                  ->orWhere('inventory_code', 'like', '%'.$request->search.'%')
+                  ->orWhere('serial_number', 'like', '%'.$request->search.'%');
+            });
+        }
+
+        // Headers HTTP pour forcer le téléchargement
+        $headers = [
+            "Content-type"        => "text/csv; charset=UTF-8",
+            "Content-Disposition" => "attachment; filename=$filename",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        // Fonction de callback qui écrit le fichier en flux (stream)
+        $callback = function() use ($query) {
+            $file = fopen('php://output', 'w');
+
+            // Astuce pour Excel : BOM UTF-8 pour les accents
+            fputs($file, "\xEF\xBB\xBF");
+
+            // Ligne d'entête
+            fputcsv($file, ['Nom', 'S/N', 'Code Inventaire', 'Catégorie', 'Statut', 'Utilisateur Actuel', 'Date Ajout'], ';');
+
+            // On traite par paquets de 100 pour ne pas surcharger la RAM
+            $query->chunk(100, function($assets) use ($file) {
+                foreach ($assets as $asset) {
+                    fputcsv($file, [
+                        $asset->name,
+                        $asset->serial_number,
+                        $asset->inventory_code,
+                        $asset->category ? $asset->category->name : 'N/A',
+                        $asset->status,
+                        $asset->user ? $asset->user->name : 'Non assigné',
+                        $asset->created_at->format('d/m/Y'),
+                    ], ';');
+                }
+            });
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
     public function destroy(Asset $asset)
     {
         $asset->delete();

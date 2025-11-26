@@ -63,4 +63,7 @@ Route::middleware('auth')->group(function () {
     Route::post('assets/{asset}/return', [App\Http\Controllers\AssetAssignmentController::class, 'markAsReturned'])->name('assets.return');
     #Création des catégories
     Route::post('api/categories', [CategoryController::class, 'storeApi'])->name('categories.store.api');
+
+    // Export Excel/CSV
+    Route::get('assets/export', [AssetController::class, 'export'])->name('assets.export');
 });
