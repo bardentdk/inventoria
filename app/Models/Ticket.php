@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class Ticket extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     // C'est ici qu'on autorise l'écriture dans la DB
     protected $fillable = [
@@ -45,5 +47,15 @@ class Ticket extends Model
     public function messages()
     {
         return $this->hasMany(TicketMessage::class);
+    }
+
+    // Configuration des logs
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            // On liste précisément ce qu'on veut garder en mémoire
+            ->logOnly(['title', 'description', 'status'])
+            // On force l'enregistrement même si rien n'a "changé" (cas de la suppression)
+            ->dontSubmitEmptyLogs();
     }
 }

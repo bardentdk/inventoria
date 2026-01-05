@@ -6,7 +6,8 @@ import {
     TicketIcon,
     UsersIcon,
     ArrowLeftOnRectangleIcon,
-    CubeIcon
+    CubeIcon, 
+    ExclamationTriangleIcon
 } from '@heroicons/vue/24/outline';
 
 const page = usePage();
@@ -45,6 +46,15 @@ const navigation = computed(() => {
             href: route('users.index'),
             icon: UsersIcon,
             active: route().current('users.*')
+        });
+    }
+    // Ajout conditionnel pour l'ADMIN uniquement
+    if (user.value && user.value.role === 'admin') {
+        items.push({
+            name: 'Logs d\'activités',
+            href: route('logs.index'),
+            icon: ExclamationTriangleIcon,
+            active: route().current('logs.*')
         });
     }
 

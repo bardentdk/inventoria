@@ -66,5 +66,5 @@ Route::middleware('auth')->group(function () {
     #Création des catégories
     Route::post('api/categories', [CategoryController::class, 'storeApi'])->name('categories.store.api');
 
-
-});
+    Route::get('/admin/logs', [App\Http\Controllers\LogController::class, 'index'])->name('logs.index');
+}); 

@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory; // <--- Ligne Importante 1
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity; 
+use Spatie\Activitylog\LogOptions; 
 
 class Asset extends Model
 {
-    use HasFactory; // <--- Ligne Importante 2
+    use HasFactory, LogsActivity; // <--- Ligne Importante 2
 
     protected $fillable = [
         'name',
@@ -43,5 +45,14 @@ class Asset extends Model
     public function currentAssignment()
     {
         return $this->hasOne(AssetAssignment::class)->whereNull('returned_at')->latest();
+    }
+    // Configuration des logs
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            // On liste précisément ce qu'on veut garder en mémoire
+            ->logOnly(['name', 'serial_number', 'inventory_code', 'status', 'user_id'])
+            // On force l'enregistrement même si rien n'a "changé" (cas de la suppression)
+            ->dontSubmitEmptyLogs();
     }
 }

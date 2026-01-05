@@ -28,19 +28,19 @@ const submit = () => {
 
                     <div>
                         <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Nom complet</label>
-                        <input type="text" v-model="form.name" class="mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600" required />
+                        <input type="text" v-model="form.name" class="px-5 mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600" required />
                         <div v-if="form.errors.name" class="text-red-500 text-xs mt-1">{{ form.errors.name }}</div>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Adresse Email</label>
-                        <input type="email" v-model="form.email" class="mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600" required />
+                        <input type="email" v-model="form.email" class="px-5 mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600" required />
                         <div v-if="form.errors.email" class="text-red-500 text-xs mt-1">{{ form.errors.email }}</div>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Rôle d'accès</label>
-                        <select v-model="form.role" class="mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600">
+                        <select v-model="form.role" class="px-5 mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600">
                             <option value="user">Utilisateur (Standard)</option>
                             <option value="admin">Administrateur (Accès total)</option>
                         </select>
@@ -49,7 +49,7 @@ const submit = () => {
 
                     <div>
                         <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Mot de passe temporaire</label>
-                        <input type="password" v-model="form.password" class="mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600" required placeholder="Minimum 8 caractères" />
+                        <input type="password" v-model="form.password" class="px-5 mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600" required placeholder="Minimum 8 caractères" />
                         <div v-if="form.errors.password" class="text-red-500 text-xs mt-1">{{ form.errors.password }}</div>
                     </div>
 

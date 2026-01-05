@@ -30,19 +30,19 @@ const submit = () => {
                 <form @submit.prevent="submit" class="space-y-6">
                     <div>
                         <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Nom complet</label>
-                        <input type="text" v-model="form.name" class="mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5" required />
+                        <input type="text" v-model="form.name" class="px-5 mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5" required />
                         <div v-if="form.errors.name" class="text-red-500 text-xs mt-1">{{ form.errors.name }}</div>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Email</label>
-                        <input type="email" v-model="form.email" class="mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5" required />
+                        <input type="email" v-model="form.email" class="px-5 mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5" required />
                         <div v-if="form.errors.email" class="text-red-500 text-xs mt-1">{{ form.errors.email }}</div>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Rôle</label>
-                        <select v-model="form.role" class="mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5">
+                        <select v-model="form.role" class="px-5 mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5">
                             <option value="user">Utilisateur</option>
                             <option value="admin">Administrateur</option>
                         </select>
@@ -50,7 +50,7 @@ const submit = () => {
 
                     <div>
                         <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Nouveau mot de passe</label>
-                        <input type="password" v-model="form.password" class="mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5" placeholder="Laisser vide pour ne pas changer" />
+                        <input type="password" v-model="form.password" class="px-5 mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5" placeholder="Laisser vide pour ne pas changer" />
                         <p class="text-xs text-slate-500 mt-1">Ne remplissez ce champ que si vous souhaitez changer le mot de passe.</p>
                         <div v-if="form.errors.password" class="text-red-500 text-xs mt-1">{{ form.errors.password }}</div>
                     </div>

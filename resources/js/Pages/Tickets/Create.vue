@@ -86,7 +86,7 @@ const submit = () => {
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Type de demande</label>
-                            <select v-model="form.type" class="mt-2 w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600">
+                            <select v-model="form.type" class="px-5 mt-2 w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600">
                                 <option value="it_issue">Panne Informatique</option>
                                 <option value="logistics">Logistique / Fournitures</option>
                                 <option value="supply_request">Demande d'achat</option>
@@ -94,7 +94,7 @@ const submit = () => {
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Urgence</label>
-                            <select v-model="form.priority" class="mt-2 w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600">
+                            <select v-model="form.priority" class="px-5  mt-2 w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600">
                                 <option value="low">Basse</option>
                                 <option value="medium">Moyenne</option>
                                 <option value="high">Haute</option>
@@ -162,13 +162,13 @@ const submit = () => {
 
                     <div>
                         <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Sujet</label>
-                        <input type="text" v-model="form.title" class="mt-2 w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600" placeholder="Ex: Impossible de me connecter au Wifi" />
+                        <input type="text" v-model="form.title" class="px-5 mt-2 w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600" placeholder="Ex: Impossible de me connecter au Wifi" />
                         <div v-if="form.errors.title" class="text-red-500 text-xs mt-1">{{ form.errors.title }}</div>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Description</label>
-                        <textarea v-model="form.description" rows="4" class="mt-2 w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600" placeholder="Plus vous donnez de détails, plus vite nous pourrons vous aider..."></textarea>
+                        <textarea v-model="form.description" rows="4" class="px-5  mt-2 w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600" placeholder="Plus vous donnez de détails, plus vite nous pourrons vous aider..."></textarea>
                         <div v-if="form.errors.description" class="text-red-500 text-xs mt-1">{{ form.errors.description }}</div>
                     </div>
 
