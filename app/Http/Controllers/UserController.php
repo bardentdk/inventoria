@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use App\Notifications\AccountCreated;
 use Inertia\Inertia;
 
 class UserController extends Controller
@@ -44,14 +45,23 @@ class UserController extends Controller
             'password' => 'required|min:8',
         ]);
 
-        User::create([
+        // 1. Création de l'utilisateur (On hashe le mot de passe pour la BDD)
+        $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'role' => $validated['role'],
             'password' => Hash::make($validated['password']),
         ]);
 
-        return redirect()->route('users.index')->with('success', 'Utilisateur créé avec succès.');
+        // 2. Envoi de la notification avec le mot de passe EN CLAIR (celui du formulaire)
+        // On utilise try/catch pour ne pas bloquer la création si Brevo échoue
+        try {
+            $user->notify(new AccountCreated($validated['password']));
+        } catch (\Exception $e) {
+            // Optionnel : Loguer l'erreur mais laisser passer
+        }
+
+        return redirect()->route('users.index')->with('success', 'Utilisateur créé et notifié par email.');
     }
 
     public function edit(User $user)

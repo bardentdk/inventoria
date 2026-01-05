@@ -67,4 +67,9 @@ Route::middleware('auth')->group(function () {
     Route::post('api/categories', [CategoryController::class, 'storeApi'])->name('categories.store.api');
 
     Route::get('/admin/logs', [App\Http\Controllers\LogController::class, 'index'])->name('logs.index');
+
+    // Gestion du Profil
+    Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.password');
 }); 

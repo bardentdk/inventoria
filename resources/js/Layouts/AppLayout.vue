@@ -98,8 +98,10 @@ const navigation = computed(() => {
                         {{ user.name.charAt(0) }}
                     </div>
                     <div class="flex-1 min-w-0 overflow-hidden">
-                        <p class="text-sm font-semibold truncate text-white">{{ user.name }}</p>
-                        <p class="text-xs text-slate-400 truncate">{{ user.role === 'admin' ? 'Administrateur' : 'Membre' }}</p>
+                        <Link :href="route('profile.edit')" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-800/80 transition-colors">
+                            <p class="text-sm font-semibold truncate text-white">{{ user.name }}</p>
+                            <p class="text-xs text-slate-400 truncate">{{ user.role === 'admin' ? 'Administrateur' : 'Membre' }}</p>
+                        </Link>
                     </div>
                     <Link :href="route('logout')" method="post" as="button" class="text-slate-500 hover:text-red-400 transition-colors p-1">
                         <ArrowLeftOnRectangleIcon class="w-5 h-5" />
@@ -113,6 +115,5 @@ const navigation = computed(() => {
                 <slot />
             </main>
         </div>
-
     </div>
 </template>
