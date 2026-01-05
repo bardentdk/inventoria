@@ -67,14 +67,15 @@ const navigation = computed(() => {
 
         <aside class="fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white border-r border-slate-800 shadow-2xl hidden lg:flex flex-col transition-all">
 
-            <div class="h-20 flex items-center px-6 border-b border-slate-800/50">
+            <div class="h-20 flex items-center mt-5 px-6 border-b border-slate-800/50">
                 <Link :href="route('dashboard')" class="flex items-center gap-2">
-                    <div class="bg-blue-600 w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-500/30">
+                    <!-- <div class="bg-blue-600 w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-500/30">
                         N
                     </div>
                     <span class="text-xl font-bold tracking-tight text-white">
                         NEXA<span class="text-blue-500">.io</span>
-                    </span>
+                    </span> -->
+                    <img src="img/logo_australe_white.png" alt="" width="80" />
                 </Link>
             </div>
 
