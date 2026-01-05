@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { Link, usePage, router } from '@inertiajs/vue3';
 import { 
     Dialog, 
@@ -13,9 +13,11 @@ import {
     UsersIcon, 
     ArrowLeftOnRectangleIcon,
     CubeIcon,
-    Bars3Icon, // Icône Menu Hamburger
-    XMarkIcon,  // Icône Fermer
-    CodeBracketIcon
+    Bars3Icon,
+    XMarkIcon,
+    CodeBracketIcon,
+    SunIcon,  // Nouveau
+    MoonIcon  // Nouveau
 } from '@heroicons/vue/24/outline';
 
 const page = usePage();
@@ -23,6 +25,31 @@ const user = computed(() => page.props.auth.user);
 
 // État pour ouvrir/fermer le menu mobile
 const sidebarOpen = ref(false);
+
+// --- GESTION DARK MODE ---
+const isDark = ref(false);
+
+const toggleTheme = () => {
+    isDark.value = !isDark.value;
+    if (isDark.value) {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+    }
+};
+
+// Au chargement, on vérifie la préférence enregistrée
+onMounted(() => {
+    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        isDark.value = true;
+        document.documentElement.classList.add('dark');
+    } else {
+        isDark.value = false;
+        document.documentElement.classList.remove('dark');
+    }
+});
 
 // Définition du menu
 const navigation = computed(() => {
@@ -73,7 +100,7 @@ const logout = () => {
 </script>
 
 <template>
-    <div class="h-full bg-slate-50 dark:bg-slate-900">
+    <div class="h-full bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
         
         <TransitionRoot as="template" :show="sidebarOpen">
             <Dialog as="div" class="relative z-50 lg:hidden" @close="sidebarOpen = false">
@@ -83,7 +110,7 @@ const logout = () => {
 
                 <div class="fixed inset-0 flex">
                     <TransitionChild as="template" enter="transition ease-in-out duration-300 transform" enter-from="-translate-x-full" enter-to="translate-x-0" leave="transition ease-in-out duration-300 transform" leave-from="translate-x-0" leave-to="-translate-x-full">
-                        <DialogPanel class="relative mr-16 flex w-full max-w-xs flex-1">
+                        <DialogPanel class="relative mr-16 flex w-full max-w-xs flex-1 bg-white dark:bg-slate-900 ring-1 ring-slate-900/10 dark:ring-white/10">
                             
                             <TransitionChild as="template" enter="ease-in-out duration-300" enter-from="opacity-0" enter-to="opacity-100" leave="ease-in-out duration-300" leave-from="opacity-100" leave-to="opacity-0">
                                 <div class="absolute left-full top-0 flex w-16 justify-center pt-5">
@@ -94,12 +121,10 @@ const logout = () => {
                                 </div>
                             </TransitionChild>
 
-                            <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-slate-900 px-6 pb-4 ring-1 ring-white/10">
+                            <div class="flex grow flex-col gap-y-5 overflow-y-auto px-6 pb-4">
                                 <div class="flex h-16 shrink-0 items-center">
                                     <div class="flex items-center gap-2 mt-10 pb-5 sm:mt-20">
-                                        <!-- <div class="bg-blue-600 w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-lg">N</div>
-                                        <span class="text-xl font-bold tracking-tight text-white">NEXA<span class="text-blue-500">.io</span></span> -->
-                                        <img src="img/logo_australe_white.png" alt="" class="w-[70px] md:w-[100px]"  />
+                                        <img src="img/logo_australe_white.png" alt="" class="w-[70px] md:w-[100px] brightness-0 dark:brightness-100 transition-all duration-300" />
                                     </div>
                                 </div>
                                 <nav class="flex flex-1 flex-col">
@@ -108,7 +133,12 @@ const logout = () => {
                                             <ul role="list" class="-mx-2 space-y-1">
                                                 <li v-for="item in navigation" :key="item.name">
                                                     <Link :href="item.href" 
-                                                        :class="[item.active ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']"
+                                                        :class="[
+                                                            item.active 
+                                                                ? 'bg-blue-50 text-blue-600 dark:bg-blue-600 dark:text-white' 
+                                                                : 'text-slate-700 hover:text-blue-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800', 
+                                                            'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold transition-colors'
+                                                        ]"
                                                         @click="sidebarOpen = false"
                                                     >
                                                         <component :is="item.icon" class="h-6 w-6 shrink-0" aria-hidden="true" />
@@ -118,14 +148,20 @@ const logout = () => {
                                             </ul>
                                         </li>
                                         <li class="mt-auto">
-                                            <Link :href="route('profile.edit')" class="flex items-center gap-x-4 py-3 text-sm font-semibold leading-6 text-white hover:bg-slate-800 rounded-md -mx-2 px-2">
-                                                <div class="h-8 w-8 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700">
+                                            <button @click="toggleTheme" class="flex items-center gap-x-4 py-2 text-sm font-medium leading-6 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white -mx-2 px-2 mb-2">
+                                                <SunIcon v-if="isDark" class="h-5 w-5" />
+                                                <MoonIcon v-else class="h-5 w-5" />
+                                                {{ isDark ? 'Mode clair' : 'Mode sombre' }}
+                                            </button>
+
+                                            <Link :href="route('profile.edit')" class="flex items-center gap-x-4 py-3 text-sm font-semibold leading-6 text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md -mx-2 px-2 transition-colors">
+                                                <div class="h-8 w-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center border border-slate-300 dark:border-slate-700">
                                                     {{ user.name.charAt(0) }}
                                                 </div>
                                                 <span class="sr-only">Mon profil</span>
                                                 <span aria-hidden="true">{{ user.name }}</span>
                                             </Link>
-                                            <button @click="logout" class="w-full text-left flex items-center gap-x-4 py-2 text-sm font-medium leading-6 text-red-400 hover:text-red-300 -mx-2 px-2 mt-2">
+                                            <button @click="logout" class="w-full text-left flex items-center gap-x-4 py-2 text-sm font-medium leading-6 text-red-600 dark:text-red-400 hover:text-red-500 -mx-2 px-2 mt-2">
                                                 <ArrowLeftOnRectangleIcon class="h-5 w-5" />
                                                 Déconnexion
                                             </button>
@@ -139,13 +175,11 @@ const logout = () => {
             </Dialog>
         </TransitionRoot>
 
-        <div class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
-            <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-slate-900 px-6 pb-4">
+        <div class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-colors duration-300">
+            <div class="flex grow flex-col gap-y-5 overflow-y-auto px-6 pb-4">
                 <div class="flex h-16 shrink-0 items-center mt-5 sm:mt-10 mb-5">
                     <Link :href="route('dashboard')" class="flex items-center gap-2">
-                        <img src="img/logo_australe_white.png" alt="" class="w-[70px] md:w-[100px]" />
-                        <!-- <div class="bg-blue-600 w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-500/30">N</div>
-                        <span class="text-xl font-bold tracking-tight text-white">NEXA<span class="text-blue-500">.io</span></span> -->
+                        <img src="img/logo_australe_white.png" alt="" class="w-[70px] md:w-[100px] brightness-0 dark:brightness-100 transition-all duration-300" />
                     </Link>
                 </div>
                 <nav class="flex flex-1 flex-col">
@@ -153,7 +187,12 @@ const logout = () => {
                         <li>
                             <ul role="list" class="-mx-2 space-y-1">
                                 <li v-for="item in navigation" :key="item.name">
-                                    <Link :href="item.href" :class="[item.active ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25' : 'text-slate-400 hover:text-white hover:bg-slate-800', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold transition-all duration-200']">
+                                    <Link :href="item.href" :class="[
+                                        item.active 
+                                            ? 'bg-blue-50 text-blue-600 dark:bg-blue-600 dark:text-white shadow-sm' 
+                                            : 'text-slate-700 hover:bg-slate-50 hover:text-blue-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white', 
+                                        'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold transition-all duration-200'
+                                    ]">
                                         <component :is="item.icon" class="h-6 w-6 shrink-0" aria-hidden="true" />
                                         {{ item.name }}
                                     </Link>
@@ -161,17 +200,28 @@ const logout = () => {
                             </ul>
                         </li>
                         <li class="mt-auto">
-                            <div class="flex items-center gap-x-4 py-3 text-sm font-semibold leading-6 text-white bg-slate-800/50 rounded-xl p-3 border border-slate-700/50">
-                                <div class="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-inner">
-                                    {{ user.name.charAt(0) }}
+                            <div class="flex flex-col gap-2 bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 border border-slate-200 dark:border-slate-700/50 transition-colors">
+                                
+                                <div class="flex items-center gap-x-4">
+                                    <div class="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-inner text-white font-bold">
+                                        {{ user.name.charAt(0) }}
+                                    </div>
+                                    <div class="flex flex-col truncate">
+                                        <span class="truncate text-slate-900 dark:text-white font-semibold">{{ user.name }}</span>
+                                        <Link :href="route('profile.edit')" class="text-xs text-slate-500 dark:text-slate-400 font-normal hover:text-blue-600 dark:hover:text-blue-400">Voir mon profil</Link>
+                                    </div>
                                 </div>
-                                <div class="flex flex-col truncate">
-                                    <span class="truncate">{{ user.name }}</span>
-                                    <Link :href="route('profile.edit')" class="text-xs text-slate-400 font-normal hover:text-blue-400">Voir mon profil</Link>
+
+                                <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-200 dark:border-slate-700">
+                                    <button @click="toggleTheme" class="p-1.5 text-slate-500 hover:text-orange-500 dark:text-slate-400 dark:hover:text-yellow-400 transition rounded-lg hover:bg-white dark:hover:bg-slate-700" title="Changer le thème">
+                                        <SunIcon v-if="isDark" class="h-5 w-5" />
+                                        <MoonIcon v-else class="h-5 w-5" />
+                                    </button>
+
+                                    <button @click="logout" class="p-1.5 text-slate-500 hover:text-red-500 dark:text-slate-400 dark:hover:text-red-400 transition rounded-lg hover:bg-white dark:hover:bg-slate-700" title="Déconnexion">
+                                        <ArrowLeftOnRectangleIcon class="h-5 w-5" />
+                                    </button>
                                 </div>
-                                <button @click="logout" class="ml-auto text-slate-400 hover:text-red-400 transition">
-                                    <ArrowLeftOnRectangleIcon class="h-5 w-5" />
-                                </button>
                             </div>
                         </li>
                     </ul>
@@ -179,17 +229,17 @@ const logout = () => {
             </div>
         </div>
 
-        <div class="sticky top-0 z-40 flex items-center gap-x-6 bg-slate-900 px-4 py-4 shadow-sm sm:px-6 lg:hidden">
-            <button type="button" class="-m-2.5 p-2.5 text-slate-400 lg:hidden" @click="sidebarOpen = true">
+        <div class="sticky top-0 z-40 flex items-center gap-x-6 bg-white dark:bg-slate-900 px-4 py-4 shadow-sm border-b border-slate-200 dark:border-slate-800 sm:px-6 lg:hidden transition-colors duration-300">
+            <button type="button" class="-m-2.5 p-2.5 text-slate-700 dark:text-slate-400 lg:hidden" @click="sidebarOpen = true">
                 <span class="sr-only">Ouvrir le menu</span>
                 <Bars3Icon class="h-6 w-6" aria-hidden="true" />
             </button>
-            <div class="flex-1 text-sm font-semibold leading-6 text-white">
-                <!-- NEXA.io --> <img src="img/logo_australe_white.png" alt="" class="w-[70px] sm:w-[100px]">
+            <div class="flex-1 text-sm font-semibold leading-6 text-slate-900 dark:text-white">
+                <img src="img/logo_australe_white.png" alt="" class="w-[70px] sm:w-[100px] brightness-0 dark:brightness-100 transition-all duration-300">
             </div>
             <Link :href="route('profile.edit')">
                 <span class="sr-only">Profil</span>
-                <div class="h-8 w-8 rounded-full bg-slate-700 flex items-center justify-center text-white border border-slate-600">
+                <div class="h-8 w-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-700 dark:text-white border border-slate-300 dark:border-slate-600">
                     {{ user.name.charAt(0) }}
                 </div>
             </Link>

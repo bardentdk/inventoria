@@ -1,5 +1,9 @@
 @import "tailwindcss";
-
+/* Ceci indique à Tailwind v4 : 
+   "Active le mode sombre UNIQUEMENT si la classe .dark est présente 
+   sur un élément parent (comme la balise <html>)."
+*/
+@variant dark (&:where(.dark, .dark *));
 @theme {
   /* Définition de la palette 2025 "Nexa" - Dark/Clean */
   --color-primary: #3b82f6;
