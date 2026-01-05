@@ -68,7 +68,7 @@ const submit = () => {
                 <form @submit.prevent="createCategory">
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nom</label>
-                        <input type="text" v-model="newCatName" class="block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white focus:ring-blue-600" autoFocus />
+                        <input type="text" v-model="newCatName" class="py-3 px-2 bg-slate-50 focus:bg-white focus:shadow-lg block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white focus:ring-blue-600" autoFocus />
                     </div>
                     <div class="flex justify-end gap-2">
                         <button type="button" @click="showCatModal = false" class="px-4 py-2 text-sm text-slate-500 hover:text-slate-700">Annuler</button>
@@ -89,14 +89,14 @@ const submit = () => {
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Nom du matériel</label>
-                            <input type="text" v-model="form.name" class="mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600" placeholder="Ex: MacBook Pro M3" required />
+                            <input type="text" v-model="form.name" class="px-2 mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600" placeholder="Ex: MacBook Pro M3" required />
                             <div v-if="form.errors.name" class="text-red-500 text-xs mt-1">{{ form.errors.name }}</div>
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Catégorie</label>
                             <div class="flex gap-2 mt-2">
-                                <select v-model="form.category_id" class="block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600" required>
+                                <select v-model="form.category_id" class="px-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600" required>
                                     <option value="" disabled>Choisir...</option>
                                     <option v-for="cat in categoriesList" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
                                 </select>
@@ -111,12 +111,12 @@ const submit = () => {
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Numéro de Série (S/N)</label>
-                            <input type="text" v-model="form.serial_number" class="mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600" placeholder="Unique" required />
+                            <input type="text" v-model="form.serial_number" class="px-2 mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600" placeholder="Unique" required />
                             <div v-if="form.errors.serial_number" class="text-red-500 text-xs mt-1">{{ form.errors.serial_number }}</div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Code Inventaire (Ref Interne)</label>
-                            <input type="text" v-model="form.inventory_code" class="mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600" placeholder="Ex: NEXA-001" required />
+                            <input type="text" v-model="form.inventory_code" class="px-2 mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600" placeholder="Ex: NEXA-001" required />
                             <div v-if="form.errors.inventory_code" class="text-red-500 text-xs mt-1">{{ form.errors.inventory_code }}</div>
                         </div>
                     </div>
@@ -125,7 +125,7 @@ const submit = () => {
 
                         <div>
                             <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">État initial</label>
-                            <select v-model="form.status" class="mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600">
+                            <select v-model="form.status" class="px-2 mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600">
                                 <option value="available">Disponible (En stock)</option>
                                 <option value="assigned">Assigné à un utilisateur</option>
                                 <option value="repair">En réparation</option>
@@ -138,7 +138,7 @@ const submit = () => {
                             <label class="block text-sm font-medium text-blue-600 dark:text-blue-400 flex items-center gap-2">
                                 <UserIcon class="w-4 h-4" /> Bénéficiaire
                             </label>
-                            <select v-model="form.user_id" class="mt-2 block w-full rounded-xl border-blue-300 ring-1 ring-blue-100 dark:bg-slate-900 dark:border-blue-700 dark:ring-blue-900/20 dark:text-white py-2.5 shadow-sm focus:ring-blue-600" required>
+                            <select v-model="form.user_id" class="px-2 mt-2 block w-full rounded-xl border-blue-300 ring-1 ring-blue-100 dark:bg-slate-900 dark:border-blue-700 dark:ring-blue-900/20 dark:text-white py-2.5 shadow-sm focus:ring-blue-600" required>
                                 <option value="" disabled>Sélectionner la personne...</option>
                                 <option v-for="user in users" :key="user.id" :value="user.id">{{ user.name }}</option>
                             </select>
@@ -149,7 +149,7 @@ const submit = () => {
 
                     <div>
                         <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Spécifications techniques / Notes</label>
-                        <textarea v-model="form.specs" rows="3" class="mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600" placeholder="Ram, Stockage, État physique..."></textarea>
+                        <textarea v-model="form.specs" rows="3" class="px-2 mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600" placeholder="Ram, Stockage, État physique..."></textarea>
                     </div>
 
                     <div class="flex items-center justify-end gap-4 pt-6 border-t border-slate-100 dark:border-slate-700">
