@@ -50,13 +50,13 @@ const updatePassword = () => {
                     <form @submit.prevent="updateInfo" class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Nom complet</label>
-                            <input type="text" v-model="formInfo.name" class="py-3 px-3 mt-1 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white" />
+                            <input type="text" v-model="formInfo.name" class="py-3 px-3 mt-1 block w-full rounded-xl border-slate-300 bg-slate-50 focus:bg-white focus:shadow-lg dark:bg-slate-900 dark:border-slate-700 dark:text-white" /> 
                             <div v-if="formInfo.errors.name" class="text-red-500 text-xs mt-1">{{ formInfo.errors.name }}</div>
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Adresse Email</label>
-                            <input type="email" v-model="formInfo.email" class="py-3 px-3 mt-1 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white" />
+                            <input type="email" v-model="formInfo.email" class="py-3 px-3 mt-1 block w-full rounded-xl border-slate-300 bg-slate-50 focus:bg-white focus:shadow-lg dark:bg-slate-900 dark:border-slate-700 dark:text-white" />
                             <div v-if="formInfo.errors.email" class="text-red-500 text-xs mt-1">{{ formInfo.errors.email }}</div>
                         </div>
 
@@ -77,19 +77,19 @@ const updatePassword = () => {
                     <form @submit.prevent="updatePassword" class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Mot de passe actuel</label>
-                            <input type="password" v-model="formPassword.current_password" class="py-3 px-3 mt-1 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white" />
+                            <input type="password" v-model="formPassword.current_password" class="py-3 px-3 mt-1 block w-full rounded-xl border-slate-300 bg-slate-50 focus:bg-white focus:shadow-lg dark:bg-slate-900 dark:border-slate-700 dark:text-white" />
                             <div v-if="formPassword.errors.current_password" class="text-red-500 text-xs mt-1">{{ formPassword.errors.current_password }}</div>
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Nouveau mot de passe</label>
-                            <input type="password" v-model="formPassword.password" class="py-3 px-3 mt-1 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white" />
+                            <input type="password" v-model="formPassword.password" class="py-3 px-3 mt-1 block w-full rounded-xl border-slate-300 bg-slate-50 focus:bg-white focus:shadow-lg dark:bg-slate-900 dark:border-slate-700 dark:text-white" />
                             <div v-if="formPassword.errors.password" class="text-red-500 text-xs mt-1">{{ formPassword.errors.password }}</div>
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Confirmer le nouveau mot de passe</label>
-                            <input type="password" v-model="formPassword.password_confirmation" class="mt-1 py-3 px-3 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white" />
+                            <input type="password" v-model="formPassword.password_confirmation" class="mt-1 py-3 px-3 block w-full rounded-xl border-slate-300 bg-slate-50 focus:bg-white focus:shadow-lg dark:bg-slate-900 dark:border-slate-700 dark:text-white" />
                         </div>
 
                         <div class="pt-4 flex justify-end">
