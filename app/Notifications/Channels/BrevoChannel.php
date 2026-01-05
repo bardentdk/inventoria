@@ -8,32 +8,35 @@ use Illuminate\Support\Facades\Log;
 
 class BrevoChannel
 {
-    /**
-     * Envoie la notification via l'API Brevo.
-     */
     public function send($notifiable, Notification $notification)
     {
-        // 1. On vérifie si la méthode toBrevo existe dans la notification
         if (!method_exists($notification, 'toBrevo')) {
             return;
         }
 
-        // 2. On récupère les données formatées par la notification
         $data = $notification->toBrevo($notifiable);
-
-        // 3. On récupère l'email du destinataire (User)
         $email = $notifiable->email;
         $name = $notifiable->name;
 
-        // 4. Appel HTTP vers Brevo
+        // --- CORRECTION ICI : On utilise config() ---
+        $apiKey = config('services.brevo.key');
+        $senderEmail = config('services.brevo.sender_email');
+        $senderName = config('services.brevo.sender_name');
+
+        // Petit check de sécurité pour le debug
+        if (empty($apiKey)) {
+            Log::error('BREVO: Clé API manquante dans la configuration services.php');
+            return;
+        }
+
         $response = Http::withHeaders([
-            'api-key' => env('BREVO_API_KEY'),
+            'api-key' => $apiKey, // Utilisation de la variable chargée via config
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
         ])->post('https://api.brevo.com/v3/smtp/email', [
             'sender' => [
-                'name' => env('BREVO_SENDER_NAME', 'NEXA'),
-                'email' => env('BREVO_SENDER_EMAIL'),
+                'name' => $senderName,
+                'email' => $senderEmail,
             ],
             'to' => [
                 [
@@ -45,7 +48,6 @@ class BrevoChannel
             'htmlContent' => $data['content'],
         ]);
 
-        // 5. Petit log en cas d'erreur pour le debug
         if ($response->failed()) {
             Log::error('Erreur Brevo API:', $response->json());
         }
