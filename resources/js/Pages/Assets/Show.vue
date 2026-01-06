@@ -5,7 +5,7 @@ import { ref } from 'vue';
 import {
     ComputerDesktopIcon, QrCodeIcon, UserCircleIcon, PencilSquareIcon,
     WrenchScrewdriverIcon, CheckBadgeIcon, ArrowRightStartOnRectangleIcon,
-    ArrowLeftEndOnRectangleIcon, ClockIcon, BuildingOfficeIcon
+    ArrowLeftEndOnRectangleIcon, ClockIcon, BuildingOfficeIcon, GiftIcon
 } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
@@ -87,10 +87,16 @@ const getStatusColor = (status) => {
                     <ComputerDesktopIcon class="w-8 h-8 text-blue-600" />
                 </div>
                 <div>
-                    <h1 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
+                    <h1 class="text-2xl font-bold text-slate-900 dark:text-white flex flex-wrap items-center gap-3">
                         {{ asset.name }}
+                        
                         <span :class="['text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wide', getStatusColor(asset.status)]">
                             {{ asset.status }}
+                        </span>
+
+                        <span v-if="asset.is_donation" class="flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wide bg-purple-100 text-purple-700 border border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700">
+                            <GiftIcon class="w-4 h-4" />
+                            Donation
                         </span>
                     </h1>
                     <div class="text-slate-500 text-sm mt-1 flex flex-wrap items-center gap-4">

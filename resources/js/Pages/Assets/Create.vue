@@ -7,7 +7,7 @@ import axios from 'axios';
 
 const props = defineProps({
     categories: Array,
-    users: Array, // <--- Nouvelle prop reçue du contrôleur
+    users: Array,
     structures: Array,
 });
 
@@ -19,9 +19,11 @@ const form = useForm({
     inventory_code: '',
     category_id: '',
     status: 'available',
-    user_id: '', // <--- Nouveau champ pour l'utilisateur
+    user_id: '',
     specs: '',
-    structures: [],
+    // CORRECTION : On utilise structure_id (singulier) initialisé à null
+    structure_id: null,
+    is_donation: false,
 });
 
 // Reset user_id si on change le statut vers autre chose que 'assigned'
@@ -123,29 +125,51 @@ const submit = () => {
                     </div>
 
                     <div class="grid grid-cols-1 gap-6 transition-all" :class="form.status === 'assigned' ? 'md:grid-cols-2' : ''">
+                        
                         <div class="mt-6">
                             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
-                                Structures de rattachement
+                                Structure de rattachement
                             </label>
                             
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 
+                                <div class="relative flex items-start">
+                                    <div class="flex h-6 items-center">
+                                        <input 
+                                            type="radio" 
+                                            id="struct-none"
+                                            :value="null" 
+                                            v-model="form.structure_id"
+                                            class="h-5 w-5 border-slate-300 text-blue-600 focus:ring-blue-600 dark:bg-slate-900 dark:border-slate-600"
+                                        >
+                                    </div>
+                                    <div class="ml-3 text-sm leading-6 w-full">
+                                        <label 
+                                            for="struct-none" 
+                                            class="font-medium text-slate-900 dark:text-white block p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200 select-none shadow-sm"
+                                            :class="{ 'border-slate-500 bg-slate-50 dark:bg-slate-800 ring-1 ring-slate-500': form.structure_id === null }"
+                                        >
+                                            Aucune (Non rattaché)
+                                        </label>
+                                    </div>
+                                </div>
+
                                 <div v-for="struct in structures" :key="struct.id" class="relative flex items-start">
                                     <div class="flex h-6 items-center">
                                         <input 
-                                            type="checkbox" 
+                                            type="radio" 
                                             :id="'struct-' + struct.id"
                                             :value="struct.id" 
-                                            v-model="form.structures"
-                                            class="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-600 dark:bg-slate-900 dark:border-slate-600 transition duration-150 ease-in-out"
+                                            v-model="form.structure_id"
+                                            class="h-5 w-5 border-slate-300 text-blue-600 focus:ring-blue-600 dark:bg-slate-900 dark:border-slate-600"
                                         >
                                     </div>
                                     
                                     <div class="ml-3 text-sm leading-6 w-full">
                                         <label 
                                             :for="'struct-' + struct.id" 
-                                            class="font-medium text-slate-900 dark:text-white block p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-200 select-none shadow-sm peer-checked:border-blue-600 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/20"
-                                            :class="{ 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 ring-1 ring-blue-500': form.structures.includes(struct.id) }"
+                                            class="font-medium text-slate-900 dark:text-white block p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-200 select-none shadow-sm"
+                                            :class="{ 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 ring-1 ring-blue-500': form.structure_id === struct.id }"
                                         >
                                             {{ struct.name }}
                                         </label>
@@ -155,9 +179,10 @@ const submit = () => {
                             </div>
                             
                             <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                                Cochez toutes les structures où cet utilisateur intervient.
+                                Sélectionnez la structure propriétaire de ce matériel.
                             </p>
                         </div>
+
                         <div>
                             <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">État initial</label>
                             <select v-model="form.status" class="px-2 mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600">
@@ -185,6 +210,21 @@ const submit = () => {
                     <div>
                         <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Spécifications techniques / Notes</label>
                         <textarea v-model="form.specs" rows="3" class="px-2 mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600" placeholder="Ram, Stockage, État physique..."></textarea>
+                    </div>
+
+                    <div class="mt-6 bg-purple-50 dark:bg-purple-900/20 p-4 rounded-xl border border-purple-100 dark:border-purple-800 flex items-center justify-between">
+                        <div>
+                            <h4 class="text-sm font-bold text-purple-900 dark:text-purple-300">Programme de Donation</h4>
+                            <p class="text-xs text-purple-700 dark:text-purple-400 mt-1">Ce matériel est-il destiné à être donné (sortir de l'actif) ?</p>
+                        </div>
+                        
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" v-model="form.is_donation" class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 dark:peer-focus:ring-purple-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-purple-600"></div>
+                            <span class="ml-3 text-sm font-medium text-slate-900 dark:text-slate-300">
+                                {{ form.is_donation ? 'Oui, Donation' : 'Non, Inventaire' }}
+                            </span>
+                        </label>
                     </div>
 
                     <div class="flex items-center justify-end gap-4 pt-6 border-t border-slate-100 dark:border-slate-700">

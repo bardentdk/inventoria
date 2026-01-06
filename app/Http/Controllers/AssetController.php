@@ -28,6 +28,16 @@ class AssetController extends Controller
         if ($request->structure) {
             $query->where('structure_id', $request->structure);
         }
+        // --- FILTRE DONATION ---
+        // Si on clique sur "Voir les donations", on affiche que ça.
+        // Sinon par défaut, on peut décider d'afficher tout ou juste le stock classique.
+        if ($request->has('show_donations') && $request->show_donations == 'true') {
+            $query->where('is_donation', true);
+        } 
+        // Optionnel : Si tu veux cacher les donations de la liste principale, décommente ça :
+        else {
+           $query->where('is_donation', false);
+        }
         // Filtre par statut (optionnel, pour plus tard)
         if ($request->input('status')) {
             $query->where('status', $request->input('status'));
@@ -61,7 +71,8 @@ class AssetController extends Controller
             'specs' => 'nullable|string',
             // Validation conditionnelle : user_id est requis SI le statut est 'assigned'
             'user_id' => 'required_if:status,assigned|nullable|exists:users,id',
-            'structure_id' => 'nullable|exists:structures,id'
+            'structure_id' => 'nullable|exists:structures,id',
+            'is_donation' => 'boolean',
         ]);
 
         // 1. Création du matériel
@@ -76,6 +87,7 @@ class AssetController extends Controller
             'user_id' => $validated['status'] === 'assigned' ? ($validated['user_id'] ?? null) : null,
             // On récupère la structure ou null si non définie
             'structure_id' => $validated['structure_id'] ?? null, 
+            'is_donation' => $request->has('is_donation') ? $request->is_donation : false,
         ]);
 
         // 2. Si on l'a assigné immédiatement, on crée l'historique (AssetAssignment)
@@ -107,11 +119,11 @@ class AssetController extends Controller
     }
     public function show(Asset $asset)
     {
-        $asset->load(['category', 'user', 'tickets.user', 'assignments.user', 'assignments.admin']);
+        // AJOUT DE 'structure' dans le load pour l'affichage fiche détail
+        $asset->load(['category', 'user', 'structure', 'tickets.user', 'assignments.user', 'assignments.admin']);
 
         return Inertia::render('Assets/Show', [
             'asset' => $asset,
-            // On envoie la liste des users pour le selecteur d'attribution
             'users' => \App\Models\User::orderBy('name')->get(['id', 'name'])
         ]);
     }
@@ -134,7 +146,8 @@ class AssetController extends Controller
             'category_id' => 'required|exists:categories,id',
             'status' => 'required|in:available,assigned,broken,repair',
             'specs' => 'nullable|string',
-            'structure_id' => 'nullable|exists:structures,id'
+            'structure_id' => 'nullable|exists:structures,id',
+            'is_donation' => 'boolean',
         ]);
 
         // Mise à jour propre
@@ -146,6 +159,8 @@ class AssetController extends Controller
             'status' => $validated['status'],
             'specs' => $validated['specs'] ?? null,
             'structure_id' => $validated['structure_id'] ?? null,
+            // --- LIGNE AJOUTÉE ICI ---
+            'is_donation' => $validated['is_donation'] ?? false, 
         ]);
 
         return redirect()->route('assets.index')->with('success', 'Matériel mis à jour.');
@@ -154,10 +169,9 @@ class AssetController extends Controller
     {
         $filename = 'inventaire-nexa-' . date('Y-m-d-H-i') . '.csv';
 
-        // 1. On charge la relation 'structure' pour l'afficher dans le CSV
         $query = Asset::query()->with(['category', 'user', 'structure']);
 
-        // 2. On applique le filtre de Recherche
+        // 1. Recherche
         if ($request->search) {
             $query->where(function($q) use ($request) {
                 $q->where('name', 'like', '%'.$request->search.'%')
@@ -166,13 +180,19 @@ class AssetController extends Controller
             });
         }
 
-        // 3. IMPORTANT : On applique le filtre Structure (comme dans l'index)
-        // Sinon l'utilisateur exporte tout même s'il a filtré une structure précise
+        // 2. Filtre Structure
         if ($request->structure) {
             $query->where('structure_id', $request->structure);
         }
 
-        // Headers HTTP
+        // 3. --- CORRECTION : FILTRE DONATION ---
+        // On applique la même logique que l'Index pour exporter ce qu'on voit à l'écran
+        if ($request->has('show_donations') && $request->show_donations == 'true') {
+            $query->where('is_donation', true);
+        } else {
+            $query->where('is_donation', false);
+        }
+
         $headers = [
             "Content-type"        => "text/csv; charset=UTF-8",
             "Content-Disposition" => "attachment; filename=$filename",
@@ -183,10 +203,10 @@ class AssetController extends Controller
 
         $callback = function() use ($query) {
             $file = fopen('php://output', 'w');
-            fputs($file, "\xEF\xBB\xBF"); // BOM UTF-8
+            fputs($file, "\xEF\xBB\xBF");
 
-            // 4. On ajoute la colonne 'Structure' dans l'entête
-            fputcsv($file, ['Nom', 'S/N', 'Code Inventaire', 'Catégorie', 'Structure', 'Statut', 'Utilisateur Actuel', 'Date Ajout'], ';');
+            // J'ai ajouté la colonne "Type" (Inventaire/Donation) pour être clair
+            fputcsv($file, ['Nom', 'S/N', 'Code Inventaire', 'Catégorie', 'Structure', 'Type', 'Statut', 'Utilisateur Actuel', 'Date Ajout'], ';');
 
             $query->chunk(100, function($assets) use ($file) {
                 foreach ($assets as $asset) {
@@ -195,8 +215,9 @@ class AssetController extends Controller
                         $asset->serial_number,
                         $asset->inventory_code,
                         $asset->category ? $asset->category->name : 'N/A',
-                        // 5. On ajoute la donnée Structure
-                        $asset->structure ? $asset->structure->name : '', 
+                        $asset->structure ? $asset->structure->name : '',
+                        // Affiche si c'est un Don ou Inventaire
+                        $asset->is_donation ? 'DONATION' : 'INVENTAIRE', 
                         $asset->status,
                         $asset->user ? $asset->user->name : 'Non assigné',
                         $asset->created_at->format('d/m/Y'),

@@ -20,6 +20,7 @@ const form = useForm({
     specs: props.asset.specs,
     // CORRECTION ICI : On utilise structure_id (singulier) et non un tableau
     structure_id: props.asset.structure_id, 
+    is_donation: props.asset ? Boolean(props.asset.is_donation) : false, // false par défaut en création
 });
 
 const submit = () => {
@@ -209,7 +210,20 @@ const confirmDelete = () => {
                         <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Spécifications techniques</label>
                         <textarea v-model="form.specs" rows="3" class="mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5"></textarea>
                     </div>
-
+                    <div class="mt-6 bg-purple-50 dark:bg-purple-900/20 p-4 rounded-xl border border-purple-100 dark:border-purple-800 flex items-center justify-between">
+                        <div>
+                            <h4 class="text-sm font-bold text-purple-900 dark:text-purple-300">Programme de Donation</h4>
+                            <p class="text-xs text-purple-700 dark:text-purple-400 mt-1">Ce matériel est-il destiné à être donné (sortir de l'actif) ?</p>
+                        </div>
+                        
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" v-model="form.is_donation" class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 dark:peer-focus:ring-purple-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-purple-600"></div>
+                            <span class="ml-3 text-sm font-medium text-slate-900 dark:text-slate-300">
+                                {{ form.is_donation ? 'Oui, Donation' : 'Non, Inventaire' }}
+                            </span>
+                        </label>
+                    </div>
                     <div class="flex items-center justify-end gap-4 pt-4 border-t border-slate-100 dark:border-slate-700">
                         <Link :href="route('assets.index')" class="text-slate-500 hover:text-slate-700 dark:text-slate-400">Annuler</Link>
                         <button type="submit" :disabled="form.processing" class="bg-blue-600 text-white px-6 py-2 rounded-xl hover:bg-blue-500 transition">Mettre à jour</button>

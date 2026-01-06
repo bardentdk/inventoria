@@ -20,7 +20,13 @@ class Asset extends Model
         'status',
         'specs', 
         'structure_id',
+        'is_donation',
     ];
+    // Ajoute aussi ce "cast" pour que Laravel le traite toujours comme un vrai booléen (true/false) et pas 0/1
+    protected $casts = [
+        'is_donation' => 'boolean',
+    ];
+    
     public function structure() {
         return $this->belongsTo(Structure::class);
     }
