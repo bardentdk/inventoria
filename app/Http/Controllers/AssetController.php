@@ -217,4 +217,28 @@ class AssetController extends Controller
             return back()->with('error', 'Erreur lors de l\'import : ' . $e->getMessage());
         }
     }
+    public function destroyAll(Request $request)
+    {
+        // 1. Sécurité : Seul un admin peut faire ça
+        if ($request->user()->role !== 'admin') {
+            abort(403, 'Action non autorisée.');
+        }
+
+        // 2. Validation du mot de passe pour confirmer
+        $request->validate([
+            'password' => 'required|current_password', // Vérifie que le mot de passe est celui de l'admin connecté
+        ]);
+
+        try {
+            // 3. Suppression de masse
+            // On utilise delete() au lieu de truncate() pour que les événements (logs) soient déclenchés si besoin
+            // et pour respecter les contraintes de clés étrangères (si un ticket est lié).
+            Asset::query()->delete();
+
+            return back()->with('success', 'Inventaire entièrement vidé avec succès.');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Impossible de vider l\'inventaire : ' . $e->getMessage());
+        }
+    }
 }

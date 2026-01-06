@@ -4,7 +4,8 @@ import { useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
-import { MagnifyingGlassIcon, PlusIcon, PencilSquareIcon, EyeIcon,ArrowDownTrayIcon, ArrowUpTrayIcon } from '@heroicons/vue/24/outline';
+import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue';
+import { MagnifyingGlassIcon, PlusIcon, PencilSquareIcon, EyeIcon, ArrowDownTrayIcon, ArrowUpTrayIcon, TrashIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/outline';
 import debounce from 'lodash/debounce';
 
 const props = defineProps({
@@ -24,7 +25,7 @@ const triggerImport = () => {
 
 const handleImport = (event) => {
     console.log("1. Événement déclenché !"); // <--- Vérifie si ça s'affiche
-    
+
     const file = event.target.files[0];
     if (!file) {
         console.log("2. Aucun fichier détecté");
@@ -33,13 +34,13 @@ const handleImport = (event) => {
     console.log("3. Fichier trouvé :", file.name);
 
     importForm.file = file;
-    
+
     // On force l'envoi en FormData (important pour les fichiers)
     importForm.post(route('assets.import'), {
         forceFormData: true, // <--- AJOUTE CETTE LIGNE
         onSuccess: () => {
             console.log("4. Succès Inertia");
-            fileInput.value.value = ''; 
+            fileInput.value.value = '';
             importForm.reset();
         },
         onError: (errors) => {
@@ -64,9 +65,29 @@ const getStatusColor = (status) => {
     };
     return colors[status] || 'bg-gray-100 text-gray-700';
 };
+
+// État de la modale de suppression totale
+const confirmDestroyAllOpen = ref(false);
+
+// Formulaire pour la suppression (contient juste le mot de passe)
+const destroyAllForm = useForm({
+    password: '',
+});
+
+const destroyAllAssets = () => {
+    destroyAllForm.post(route('assets.destroy-all'), {
+        preserveScroll: true,
+        onSuccess: () => {
+            confirmDestroyAllOpen.value = false;
+            destroyAllForm.reset();
+        },
+        onFinish: () => destroyAllForm.reset(),
+    });
+};
 </script>
 
 <template>
+
     <Head title="Inventaire" />
 
     <AppLayout>
@@ -76,31 +97,30 @@ const getStatusColor = (status) => {
                 <p class="mt-2 text-sm text-slate-500">Gérez l'ensemble du parc informatique.</p>
             </div>
             <div class="mt-4 sm:mt-0 flex gap-4">
-                <a :href="route('assets.export', { search: search })" class="flex items-center gap-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 px-4 py-2 rounded-lg font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition shadow-sm">
+                <a :href="route('assets.export', { search: search })"
+                    class="flex items-center gap-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 px-4 py-2 rounded-lg font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition shadow-sm">
                     <ArrowDownTrayIcon class="w-5 h-5" />
                     Exporter CSV
                 </a>
-                <input 
-                    type="file" 
-                    ref="fileInput" 
-                    class="hidden" 
-                    accept=".csv, .xlsx" 
-                    @change="handleImport" 
-                />
+                <input type="file" ref="fileInput" class="hidden" accept=".csv, .xlsx" @change="handleImport" />
 
-                <button 
-                    @click="triggerImport" 
-                    :disabled="importForm.processing"
-                    class="flex items-center gap-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 px-4 py-2 rounded-lg font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition shadow-sm disabled:opacity-50"
-                >
+                <button @click="triggerImport" :disabled="importForm.processing"
+                    class="flex items-center gap-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 px-4 py-2 rounded-lg font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition shadow-sm disabled:opacity-50">
                     <ArrowUpTrayIcon v-if="!importForm.processing" class="w-5 h-5" />
-                    <span v-else class="w-5 h-5 border-2 border-slate-500 border-t-transparent rounded-full animate-spin"></span>
+                    <span v-else
+                        class="w-5 h-5 border-2 border-slate-500 border-t-transparent rounded-full animate-spin"></span>
                     Importer
                 </button>
-                <Link :href="route('assets.create')" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium shadow-lg shadow-blue-500/30 transition-all">
+                <Link :href="route('assets.create')"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium shadow-lg shadow-blue-500/30 transition-all">
                     <PlusIcon class="w-5 h-5" />
                     Ajouter
                 </Link>
+                <button v-if="$page.props.auth.user.role === 'admin'" @click="confirmDestroyAllOpen = true"
+                    class="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 px-4 py-2 rounded-lg font-medium hover:bg-red-100 dark:hover:bg-red-900/40 transition shadow-sm ml-2">
+                    <TrashIcon class="w-5 h-5" />
+                    <span class="hidden sm:inline">Tout Vider</span>
+                </button>
             </div>
         </div>
 
@@ -114,22 +134,33 @@ const getStatusColor = (status) => {
             </div>
         </div>
 
-        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/50 overflow-hidden">
+        <div
+            class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/50 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
                     <thead class="bg-slate-50 dark:bg-slate-900/50">
                         <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Matériel</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Référence</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Catégorie</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Statut</th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                Matériel</th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                Référence</th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                Catégorie</th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                Statut</th>
                             <th scope="col" class="relative px-6 py-3"><span class="sr-only">Actions</span></th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
-                        <tr v-for="asset in assets.data" :key="asset.id" class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                        <tr v-for="asset in assets.data" :key="asset.id"
+                            class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <Link :href="route('assets.show', asset.id)" class="text-sm font-medium text-slate-900 dark:text-white hover:text-blue-600 transition-colors block">
+                                <Link :href="route('assets.show', asset.id)"
+                                    class="text-sm font-medium text-slate-900 dark:text-white hover:text-blue-600 transition-colors block">
                                     {{ asset.name }}
                                 </Link>
                                 <div v-if="asset.user" class="text-xs text-blue-500 mt-0.5 flex items-center gap-1">
@@ -139,27 +170,33 @@ const getStatusColor = (status) => {
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <Link :href="route('assets.show', asset.id)" class="group block cursor-pointer">
-                                    <div class="text-sm text-slate-500 group-hover:text-blue-600 transition-colors">S/N: {{ asset.serial_number }}</div>
+                                    <div class="text-sm text-slate-500 group-hover:text-blue-600 transition-colors">S/N:
+                                        {{ asset.serial_number }}</div>
                                     <div class="text-xs text-slate-400">Ref: {{ asset.inventory_code }}</div>
                                 </Link>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
+                                <span
+                                    class="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
                                     {{ asset.category.name }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize', getStatusColor(asset.status)]">
+                                <span
+                                    :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize', getStatusColor(asset.status)]">
                                     {{ asset.status }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <div class="flex items-center justify-end gap-3">
-                                    <Link :href="route('assets.show', asset.id)" class="text-slate-400 hover:text-blue-600 transition-colors" title="Voir la fiche">
+                                    <Link :href="route('assets.show', asset.id)"
+                                        class="text-slate-400 hover:text-blue-600 transition-colors"
+                                        title="Voir la fiche">
                                         <EyeIcon class="w-5 h-5" />
                                     </Link>
 
-                                    <Link :href="route('assets.edit', asset.id)" class="text-slate-400 hover:text-orange-600 transition-colors" title="Modifier">
+                                    <Link :href="route('assets.edit', asset.id)"
+                                        class="text-slate-400 hover:text-orange-600 transition-colors" title="Modifier">
                                         <PencilSquareIcon class="w-5 h-5" />
                                     </Link>
                                 </div>
@@ -174,22 +211,28 @@ const getStatusColor = (status) => {
                 </table>
             </div>
 
-            <div class="bg-slate-50 dark:bg-slate-900/50 px-6 py-3 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
+            <div
+                class="bg-slate-50 dark:bg-slate-900/50 px-6 py-3 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
                 <div class="flex-1 flex justify-between sm:hidden">
-                    <Link v-if="assets.prev_page_url" :href="assets.prev_page_url" class="relative inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Précédent</Link>
-                    <Link v-if="assets.next_page_url" :href="assets.next_page_url" class="relative ml-3 inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Suivant</Link>
+                    <Link v-if="assets.prev_page_url" :href="assets.prev_page_url"
+                        class="relative inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                        Précédent</Link>
+                    <Link v-if="assets.next_page_url" :href="assets.next_page_url"
+                        class="relative ml-3 inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                        Suivant</Link>
                 </div>
                 <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                     <div>
                         <p class="text-sm text-slate-700 dark:text-slate-400">
-                            Affichage de <span class="font-medium">{{ assets.from }}</span> à <span class="font-medium">{{ assets.to }}</span> sur <span class="font-medium">{{ assets.total }}</span> résultats
+                            Affichage de <span class="font-medium">{{ assets.from }}</span> à <span
+                                class="font-medium">{{ assets.to }}</span> sur <span class="font-medium">{{ assets.total
+                                }}</span> résultats
                         </p>
                     </div>
                     <div>
                         <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
                             <Link v-for="link in assets.links" :key="link.label" :href="link.url ?? '#'"
-                                v-html="link.label"
-                                :class="[
+                                v-html="link.label" :class="[
                                     'relative inline-flex items-center px-4 py-2 text-sm font-semibold focus:z-20',
                                     link.active
                                         ? 'z-10 bg-blue-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600'
@@ -198,12 +241,82 @@ const getStatusColor = (status) => {
                                     // Arrondir les coins du premier et dernier élément
                                     link.label.includes('Previous') ? 'rounded-l-md' : '',
                                     link.label.includes('Next') ? 'rounded-r-md' : ''
-                                ]"
-                            />
+                                ]" />
                         </nav>
                     </div>
                 </div>
             </div>
         </div>
+        <TransitionRoot as="template" :show="confirmDestroyAllOpen">
+            <Dialog as="div" class="relative z-50" @close="confirmDestroyAllOpen = false">
+                <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0"
+                    enter-to="opacity-100" leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
+                    <div class="fixed inset-0 bg-slate-900/75 transition-opacity" />
+                </TransitionChild>
+
+                <div class="fixed inset-0 z-10 overflow-y-auto">
+                    <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                        <TransitionChild as="template" enter="ease-out duration-300"
+                            enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                            enter-to="opacity-100 translate-y-0 sm:scale-100" leave="ease-in duration-200"
+                            leave-from="opacity-100 translate-y-0 sm:scale-100"
+                            leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
+                            <DialogPanel
+                                class="relative transform overflow-hidden rounded-lg bg-white dark:bg-slate-800 px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+                                <div class="sm:flex sm:items-start">
+                                    <div
+                                        class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30 sm:mx-0 sm:h-10 sm:w-10">
+                                        <ExclamationTriangleIcon class="h-6 w-6 text-red-600 dark:text-red-400"
+                                            aria-hidden="true" />
+                                    </div>
+                                    <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+                                        <DialogTitle as="h3"
+                                            class="text-base font-semibold leading-6 text-slate-900 dark:text-white">
+                                            Vider tout l'inventaire ?
+                                        </DialogTitle>
+                                        <div class="mt-2">
+                                            <p class="text-sm text-slate-500 dark:text-slate-400">
+                                                Êtes-vous sûr de vouloir supprimer <strong>l'intégralité</strong> du
+                                                matériel ? <br>
+                                                Cette action est irréversible et supprimera toutes les données de
+                                                l'inventaire.
+                                            </p>
+
+                                            <div class="mt-4">
+                                                <label
+                                                    class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                                    Confirmez avec votre mot de passe :
+                                                </label>
+                                                <input type="password" v-model="destroyAllForm.password"
+                                                    class="w-full rounded-md border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white shadow-sm focus:border-red-500 focus:ring-red-500"
+                                                    placeholder="Votre mot de passe admin"
+                                                    @keyup.enter="destroyAllAssets">
+                                                <p v-if="destroyAllForm.errors.password"
+                                                    class="mt-1 text-sm text-red-600">
+                                                    {{ destroyAllForm.errors.password }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                                    <button type="button"
+                                        class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto disabled:opacity-50"
+                                        :disabled="destroyAllForm.processing" @click="destroyAllAssets">
+                                        <span v-if="destroyAllForm.processing">Suppression...</span>
+                                        <span v-else>Tout Supprimer définitivement</span>
+                                    </button>
+                                    <button type="button"
+                                        class="mt-3 inline-flex w-full justify-center rounded-md bg-white dark:bg-slate-700 px-3 py-2 text-sm font-semibold text-slate-900 dark:text-white shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 sm:mt-0 sm:w-auto"
+                                        @click="confirmDestroyAllOpen = false">
+                                        Annuler
+                                    </button>
+                                </div>
+                            </DialogPanel>
+                        </TransitionChild>
+                    </div>
+                </div>
+            </Dialog>
+        </TransitionRoot>
     </AppLayout>
 </template>
