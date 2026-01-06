@@ -175,9 +175,10 @@ class AssetController extends Controller
     {
         $filename = 'inventaire-nexa-' . date('Y-m-d-H-i') . '.csv';
 
+        // 1. On charge toutes les relations
         $query = Asset::query()->with(['category', 'user', 'structure']);
 
-        // 1. Recherche
+        // 2. Filtre Recherche
         if ($request->search) {
             $query->where(function($q) use ($request) {
                 $q->where('name', 'like', '%'.$request->search.'%')
@@ -186,13 +187,12 @@ class AssetController extends Controller
             });
         }
 
-        // 2. Filtre Structure
+        // 3. Filtre Structure
         if ($request->structure) {
             $query->where('structure_id', $request->structure);
         }
 
-        // 3. --- CORRECTION : FILTRE DONATION ---
-        // On applique la même logique que l'Index pour exporter ce qu'on voit à l'écran
+        // 4. Filtre Donation (Même logique que l'écran)
         if ($request->has('show_donations') && $request->show_donations == 'true') {
             $query->where('is_donation', true);
         } else {
@@ -209,10 +209,23 @@ class AssetController extends Controller
 
         $callback = function() use ($query) {
             $file = fopen('php://output', 'w');
-            fputs($file, "\xEF\xBB\xBF");
+            fputs($file, "\xEF\xBB\xBF"); // BOM UTF-8 pour Excel
 
-            // J'ai ajouté la colonne "Type" (Inventaire/Donation) pour être clair
-            fputcsv($file, ['Nom', 'S/N', 'Code Inventaire', 'Catégorie', 'Structure', 'Type', 'Statut', 'Utilisateur Actuel', 'Date Ajout'], ';');
+            // --- ENTÊTES COMPLÈTES ---
+            fputcsv($file, [
+                'Nom', 
+                'S/N', 
+                'Code Inventaire', 
+                'Catégorie', 
+                'Structure', 
+                'Type',                    // Inventaire ou Donation
+                'Statut', 
+                'Utilisateur (Interne)',   // Si assigné à un employé
+                'Bénéficiaire (Donation)', // Si donné à l'extérieur
+                'Date du Don', 
+                'Spécifications / Notes',  // Toutes les infos techniques
+                'Date Ajout'
+            ], ';');
 
             $query->chunk(100, function($assets) use ($file) {
                 foreach ($assets as $asset) {
@@ -222,10 +235,15 @@ class AssetController extends Controller
                         $asset->inventory_code,
                         $asset->category ? $asset->category->name : 'N/A',
                         $asset->structure ? $asset->structure->name : '',
-                        // Affiche si c'est un Don ou Inventaire
-                        $asset->is_donation ? 'DONATION' : 'INVENTAIRE', 
+                        $asset->is_donation ? 'DONATION' : 'INVENTAIRE',
                         $asset->status,
-                        $asset->user ? $asset->user->name : 'Non assigné',
+                        // Utilisateur interne (si lié à un compte User)
+                        $asset->user ? $asset->user->name : '',
+                        // Infos Donation (si c'est un don externe)
+                        $asset->donation_recipient ?? '',
+                        $asset->donation_date ? $asset->donation_date->format('d/m/Y') : '',
+                        // Notes techniques
+                        $asset->specs ?? '',
                         $asset->created_at->format('d/m/Y'),
                     ], ';');
                 }
