@@ -15,6 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             HandleInertiaRequests::class, // <--- Ajoute ça ici
         ]);
+        $middleware->web(append: [
+            \App\Http\Middleware\TrackUserActivity::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

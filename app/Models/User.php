@@ -6,11 +6,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
+    use LogsActivity;
 
     /**
      * The attributes that are mass assignable.
@@ -23,6 +26,9 @@ class User extends Authenticatable
         'password',
         'role',       // Important pour ton admin
         'department', // Optionnel
+        'last_login_at',
+        'last_login_ip',
+        'last_activity_at',
     ];
 
     /**
@@ -75,5 +81,15 @@ class User extends Authenticatable
     public function messages()
     {
         return $this->hasMany(TicketMessage::class);
+    }
+    // --- CONFIGURATION LOGS ---
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll() // Log tous les champs
+            ->logOnlyDirty() // Seulement ce qui change
+            ->dontSubmitEmptyLogs()
+            // TRÈS IMPORTANT : On ne log jamais le mot de passe ni le token de "se souvenir de moi"
+            ->logExcept(['password', 'remember_token', 'updated_at']);
     }
 }

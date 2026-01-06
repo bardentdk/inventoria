@@ -59,12 +59,19 @@ class Asset extends Model
         return $this->hasOne(AssetAssignment::class)->whereNull('returned_at')->latest();
     }
     // Configuration des logs
+    // public function getActivitylogOptions(): LogOptions
+    // {
+    //     return LogOptions::defaults()
+    //         // On liste précisément ce qu'on veut garder en mémoire
+    //         ->logOnly(['name', 'serial_number', 'inventory_code', 'status', 'user_id'])
+    //         // On force l'enregistrement même si rien n'a "changé" (cas de la suppression)
+    //         ->dontSubmitEmptyLogs();
+    // }
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            // On liste précisément ce qu'on veut garder en mémoire
-            ->logOnly(['name', 'serial_number', 'inventory_code', 'status', 'user_id'])
-            // On force l'enregistrement même si rien n'a "changé" (cas de la suppression)
+            ->logAll() // Log tous les attributs (name, status, etc.)
+            ->logOnlyDirty() // Log seulement ce qui a changé
             ->dontSubmitEmptyLogs();
     }
 }

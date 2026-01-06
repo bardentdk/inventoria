@@ -90,6 +90,14 @@ const navigation = computed(() => {
             active: route().current('logs.*') 
         });
     }
+    if (user.value && user.value.role === 'admin') {
+        items.push({ 
+            name: 'Activités de l\'équipe', 
+            href: route('activity.index'), 
+            icon: CodeBracketIcon, 
+            active: route().current('activity.*') 
+        });
+    }
 
     return items;
 });
