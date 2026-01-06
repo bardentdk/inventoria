@@ -88,7 +88,7 @@ const getSubjectName = (type) => {
         <div class="mb-6 flex flex-col sm:flex-row gap-4 bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/50">
             <div class="flex-1">
                 <label class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1 block">Filtrer par personne</label>
-                <select v-model="selectedUser" class="w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white shadow-sm focus:ring-blue-500">
+                <select v-model="selectedUser" class="py-3 px-3 w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white shadow-sm focus:ring-blue-500">
                     <option value="">Tous les utilisateurs</option>
                     <option v-for="user in users" :key="user.id" :value="user.id">{{ user.name }}</option>
                 </select>
@@ -97,7 +97,7 @@ const getSubjectName = (type) => {
                 <label class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1 block">Recherche textuelle</label>
                 <div class="relative">
                     <MagnifyingGlassIcon class="w-5 h-5 absolute left-3 top-3 text-slate-400" />
-                    <input v-model="search" type="text" placeholder="Rechercher une action, un IP..." class="pl-10 w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white shadow-sm focus:ring-blue-500">
+                    <input v-model="search" type="text" placeholder="Rechercher une action, un IP..." class="py-3 px-3 pl-10 w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white shadow-sm focus:ring-blue-500">
                 </div>
             </div>
         </div>
