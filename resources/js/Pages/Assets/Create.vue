@@ -2,7 +2,7 @@
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Head, useForm, Link } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
-import { PlusIcon, XMarkIcon, UserIcon } from '@heroicons/vue/24/outline';
+import { PlusIcon, XMarkIcon, UserIcon, GiftIcon } from '@heroicons/vue/24/outline';
 import axios from 'axios';
 
 const props = defineProps({
@@ -24,6 +24,8 @@ const form = useForm({
     // CORRECTION : On utilise structure_id (singulier) initialisé à null
     structure_id: null,
     is_donation: false,
+    donation_recipient: props.asset ? props.asset.donation_recipient : '',
+    donation_date: props.asset ? props.asset.donation_date : '',
 });
 
 // Reset user_id si on change le statut vers autre chose que 'assigned'
@@ -212,19 +214,44 @@ const submit = () => {
                         <textarea v-model="form.specs" rows="3" class="px-2 mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600" placeholder="Ram, Stockage, État physique..."></textarea>
                     </div>
 
-                    <div class="mt-6 bg-purple-50 dark:bg-purple-900/20 p-4 rounded-xl border border-purple-100 dark:border-purple-800 flex items-center justify-between">
-                        <div>
-                            <h4 class="text-sm font-bold text-purple-900 dark:text-purple-300">Programme de Donation</h4>
-                            <p class="text-xs text-purple-700 dark:text-purple-400 mt-1">Ce matériel est-il destiné à être donné (sortir de l'actif) ?</p>
+                    <div class="mt-6 bg-purple-50 dark:bg-purple-900/20 p-5 rounded-xl border border-purple-100 dark:border-purple-800 transition-all duration-300">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h4 class="text-sm font-bold text-purple-900 dark:text-purple-300 flex items-center gap-2">
+                                    <GiftIcon class="w-5 h-5" />
+                                    Programme de Donation
+                                </h4>
+                                <p class="text-xs text-purple-700 dark:text-purple-400 mt-1">Ce matériel est-il destiné à sortir de l'actif ?</p>
+                            </div>
+                            
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" v-model="form.is_donation" class="sr-only peer">
+                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 dark:peer-focus:ring-purple-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-purple-600"></div>
+                            </label>
                         </div>
-                        
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" v-model="form.is_donation" class="sr-only peer">
-                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 dark:peer-focus:ring-purple-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-purple-600"></div>
-                            <span class="ml-3 text-sm font-medium text-slate-900 dark:text-slate-300">
-                                {{ form.is_donation ? 'Oui, Donation' : 'Non, Inventaire' }}
-                            </span>
-                        </label>
+
+                        <div v-if="form.is_donation" class="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 border-t border-purple-200 dark:border-purple-700 pt-4 mt-2">
+                            <div>
+                                <label class="block text-sm font-medium text-purple-900 dark:text-purple-200 mb-1">Bénéficiaire (Externe)</label>
+                                <input 
+                                    type="text" 
+                                    v-model="form.donation_recipient" 
+                                    placeholder="Ex: Association X, Étudiant Y..."
+                                    class="block w-full rounded-lg border-purple-300 dark:border-purple-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-purple-900 dark:text-purple-200 mb-1">Date du don</label>
+                                <input 
+                                    type="date" 
+                                    v-model="form.donation_date"
+                                    class="block w-full rounded-lg border-purple-300 dark:border-purple-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                                />
+                            </div>
+                            <div class="col-span-full text-xs text-purple-600 dark:text-purple-400 italic">
+                                Laisser vide si le matériel est classé "Donation" mais pas encore attribué.
+                            </div>
+                        </div>
                     </div>
 
                     <div class="flex items-center justify-end gap-4 pt-6 border-t border-slate-100 dark:border-slate-700">

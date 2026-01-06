@@ -124,7 +124,7 @@ const logout = () => {
                             <div class="flex grow flex-col gap-y-5 overflow-y-auto px-6 pb-4">
                                 <div class="flex h-16 shrink-0 items-center">
                                     <div class="flex items-center gap-2 mt-10 pb-5 sm:mt-20">
-                                        <img src="img/logo_australe_white.png" alt="" class="w-[70px] md:w-[100px] brightness-0 dark:brightness-100 transition-all duration-300" />
+                                        <img src="/img/logo_australe_white.png" alt="" class="w-[70px] md:w-[100px] brightness-0 dark:brightness-100 transition-all duration-300" />
                                     </div>
                                 </div>
                                 <nav class="flex flex-1 flex-col">
@@ -179,7 +179,7 @@ const logout = () => {
             <div class="flex grow flex-col gap-y-5 overflow-y-auto px-6 pb-4">
                 <div class="flex h-16 shrink-0 items-center mt-5 sm:mt-10 mb-5">
                     <Link :href="route('dashboard')" class="flex items-center gap-2">
-                        <img src="img/logo_australe_white.png" alt="" class="w-[70px] md:w-[100px] brightness-0 dark:brightness-100 transition-all duration-300" />
+                        <img src="/img/logo_australe_white.png" alt="" class="w-[70px] md:w-[100px] brightness-0 dark:brightness-100 transition-all duration-300" />
                     </Link>
                 </div>
                 <nav class="flex flex-1 flex-col">
@@ -235,7 +235,7 @@ const logout = () => {
                 <Bars3Icon class="h-6 w-6" aria-hidden="true" />
             </button>
             <div class="flex-1 text-sm font-semibold leading-6 text-slate-900 dark:text-white">
-                <img src="img/logo_australe_white.png" alt="" class="w-[70px] sm:w-[100px] brightness-0 dark:brightness-100 transition-all duration-300">
+                <img src="/img/logo_australe_white.png" alt="" class="w-[70px] sm:w-[100px] brightness-0 dark:brightness-100 transition-all duration-300">
             </div>
             <Link :href="route('profile.edit')">
                 <span class="sr-only">Profil</span>

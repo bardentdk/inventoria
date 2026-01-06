@@ -148,6 +148,9 @@ class AssetController extends Controller
             'specs' => 'nullable|string',
             'structure_id' => 'nullable|exists:structures,id',
             'is_donation' => 'boolean',
+            // Validation conditionnelle : Requis seulement si donation cochée et qu'on veut valider le don
+            'donation_recipient' => 'nullable|string|max:255',
+            'donation_date' => 'nullable|date',
         ]);
 
         // Mise à jour propre
@@ -161,6 +164,9 @@ class AssetController extends Controller
             'structure_id' => $validated['structure_id'] ?? null,
             // --- LIGNE AJOUTÉE ICI ---
             'is_donation' => $validated['is_donation'] ?? false, 
+            // Si c'est une donation, on enregistre les infos, sinon on remet à null pour nettoyer
+            'donation_recipient' => ($validated['is_donation'] ?? false) ? ($validated['donation_recipient'] ?? null) : null,
+            'donation_date' => ($validated['is_donation'] ?? false) ? ($validated['donation_date'] ?? null) : null,
         ]);
 
         return redirect()->route('assets.index')->with('success', 'Matériel mis à jour.');

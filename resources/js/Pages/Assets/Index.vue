@@ -190,7 +190,7 @@ const getStatusColor = (status) => {
                     <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                         <tr v-for="asset in assets.data" :key="asset.id" class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
                             
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <!-- <td class="px-6 py-4 whitespace-nowrap">
                                 <Link :href="route('assets.show', asset.id)" class="text-sm font-medium text-slate-900 dark:text-white hover:text-blue-600 transition-colors block">
                                     {{ asset.name }}
                                     <span v-if="asset.is_donation" class="ml-2 inline-flex items-center rounded-md bg-purple-50 px-2 py-1 text-xs font-medium text-purple-700 ring-1 ring-inset ring-purple-700/10">
@@ -201,8 +201,26 @@ const getStatusColor = (status) => {
                                     <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
                                     Assigné à {{ asset.user.name }}
                                 </div>
-                            </td>
+                            </td> -->
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <Link :href="route('assets.show', asset.id)" class="text-sm font-medium text-slate-900 dark:text-white hover:text-blue-600 transition-colors block">
+                                    {{ asset.name }}
+                                    
+                                    <span v-if="asset.is_donation" class="ml-2 inline-flex items-center gap-1 rounded-md bg-purple-50 px-2 py-1 text-xs font-medium text-purple-700 ring-1 ring-inset ring-purple-700/10">
+                                        <GiftIcon class="w-3 h-3" />
+                                        {{ asset.donation_recipient ? 'Donné' : 'À donner' }}
+                                    </span>
+                                </Link>
 
+                                <div v-if="asset.is_donation && asset.donation_recipient" class="text-xs text-purple-600 mt-0.5 flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                                    Bénéficiaire : {{ asset.donation_recipient }}
+                                </div>
+                                <div v-else-if="asset.user" class="text-xs text-blue-500 mt-0.5 flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                                    Assigné à {{ asset.user.name }}
+                                </div>
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <Link :href="route('assets.show', asset.id)" class="group block cursor-pointer">
                                     <div class="text-sm text-slate-500 group-hover:text-blue-600 transition-colors">S/N: {{ asset.serial_number }}</div>

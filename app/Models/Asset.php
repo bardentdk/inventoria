@@ -21,12 +21,15 @@ class Asset extends Model
         'specs', 
         'structure_id',
         'is_donation',
+        'donation_recipient', 
+        'donation_date',
     ];
     // Ajoute aussi ce "cast" pour que Laravel le traite toujours comme un vrai booléen (true/false) et pas 0/1
     protected $casts = [
         'is_donation' => 'boolean',
+        'donation_date' => 'date',
     ];
-    
+
     public function structure() {
         return $this->belongsTo(Structure::class);
     }

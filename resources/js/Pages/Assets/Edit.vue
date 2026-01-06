@@ -3,7 +3,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { Head, useForm, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue';
-import { ExclamationTriangleIcon, TrashIcon } from '@heroicons/vue/24/outline';
+import { ExclamationTriangleIcon, TrashIcon, GiftIcon } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
     asset: Object,
@@ -21,6 +21,8 @@ const form = useForm({
     // CORRECTION ICI : On utilise structure_id (singulier) et non un tableau
     structure_id: props.asset.structure_id, 
     is_donation: props.asset ? Boolean(props.asset.is_donation) : false, // false par défaut en création
+    donation_recipient: props.asset ? props.asset.donation_recipient : '', 
+    donation_date: props.asset ? props.asset.donation_date : '',
 });
 
 const submit = () => {
@@ -116,13 +118,13 @@ const confirmDelete = () => {
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Nom du matériel</label>
-                            <input type="text" v-model="form.name" class="mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5" />
+                            <input type="text" v-model="form.name" class="py-3 px-2 mt-2 block w-full rounded-xl border-slate-300 bg-slate-50 focus:bg-white focus:border focus:shadow-lg dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5" />
                             <div v-if="form.errors.name" class="text-red-500 text-xs mt-1">{{ form.errors.name }}</div>
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Catégorie</label>
-                            <select v-model="form.category_id" class="mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5">
+                            <select v-model="form.category_id" class="py-3 px-2 mt-2 block w-full rounded-xl border-slate-300 bg-slate-50 focus:bg-white focus:border focus:shadow-lg dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5">
                                 <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
                             </select>
                         </div>
@@ -131,17 +133,17 @@ const confirmDelete = () => {
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Numéro de Série (S/N)</label>
-                            <input type="text" v-model="form.serial_number" class="mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5" />
+                            <input type="text" v-model="form.serial_number" class="py-3 px-2 mt-2 block w-full rounded-xl border-slate-300 bg-slate-50 focus:bg-white focus:border focus:shadow-lg dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5" />
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Code Inventaire (Interne)</label>
-                            <input type="text" v-model="form.inventory_code" class="mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5" />
+                            <input type="text" v-model="form.inventory_code" class="py-3 px-2 mt-2 block w-full rounded-xl border-slate-300 bg-slate-50 focus:bg-white focus:border focus:shadow-lg dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5" />
                         </div>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">État actuel</label>
-                        <select v-model="form.status" class="mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5">
+                        <select v-model="form.status" class="py-3 px-2 mt-2 block w-full rounded-xl border-slate-300 bg-slate-50 focus:bg-white focus:border focus:shadow-lg dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5">
                             <option value="available">Disponible (Stock)</option>
                             <option value="assigned">Assigné (En cours d'utilisation)</option>
                             <option value="repair">En réparation</option>
@@ -208,21 +210,46 @@ const confirmDelete = () => {
 
                     <div>
                         <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Spécifications techniques</label>
-                        <textarea v-model="form.specs" rows="3" class="mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5"></textarea>
+                        <textarea v-model="form.specs" rows="3" class="py-3 px-3 mt-2 block w-full rounded-xl border-slate-300 bg-slate-50 focus:bg-white focus:border focus:shadow-lg dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5"></textarea>
                     </div>
-                    <div class="mt-6 bg-purple-50 dark:bg-purple-900/20 p-4 rounded-xl border border-purple-100 dark:border-purple-800 flex items-center justify-between">
-                        <div>
-                            <h4 class="text-sm font-bold text-purple-900 dark:text-purple-300">Programme de Donation</h4>
-                            <p class="text-xs text-purple-700 dark:text-purple-400 mt-1">Ce matériel est-il destiné à être donné (sortir de l'actif) ?</p>
+                    <div class="mt-6 bg-purple-50 dark:bg-purple-900/20 p-5 rounded-xl border border-purple-100 dark:border-purple-800 transition-all duration-300">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h4 class="text-sm font-bold text-purple-900 dark:text-purple-300 flex items-center gap-2">
+                                    <GiftIcon class="w-5 h-5" />
+                                    Programme de Donation
+                                </h4>
+                                <p class="text-xs text-purple-700 dark:text-purple-400 mt-1">Ce matériel est-il destiné à sortir de l'actif ?</p>
+                            </div>
+                            
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" v-model="form.is_donation" class="sr-only peer">
+                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 dark:peer-focus:ring-purple-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-purple-600"></div>
+                            </label>
                         </div>
-                        
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" v-model="form.is_donation" class="sr-only peer">
-                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 dark:peer-focus:ring-purple-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-purple-600"></div>
-                            <span class="ml-3 text-sm font-medium text-slate-900 dark:text-slate-300">
-                                {{ form.is_donation ? 'Oui, Donation' : 'Non, Inventaire' }}
-                            </span>
-                        </label>
+
+                        <div v-if="form.is_donation" class="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 border-t border-purple-200 dark:border-purple-700 pt-4 mt-2">
+                            <div>
+                                <label class="block text-sm font-medium text-purple-900 dark:text-purple-200 mb-1">Bénéficiaire (Externe)</label>
+                                <input 
+                                    type="text" 
+                                    v-model="form.donation_recipient" 
+                                    placeholder="Ex: Association X, Étudiant Y..."
+                                    class="px-3 py-3 block w-full rounded-lg border-purple-300 dark:border-purple-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-purple-900 dark:text-purple-200 mb-1">Date du don</label>
+                                <input 
+                                    type="date" 
+                                    v-model="form.donation_date"
+                                    class="px-3 py-3 block w-full rounded-lg border-purple-300 dark:border-purple-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                                />
+                            </div>
+                            <div class="col-span-full text-xs text-purple-600 dark:text-purple-400 italic">
+                                Laisser vide si le matériel est classé "Donation" mais pas encore attribué.
+                            </div>
+                        </div>
                     </div>
                     <div class="flex items-center justify-end gap-4 pt-4 border-t border-slate-100 dark:border-slate-700">
                         <Link :href="route('assets.index')" class="text-slate-500 hover:text-slate-700 dark:text-slate-400">Annuler</Link>
