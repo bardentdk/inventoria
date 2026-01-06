@@ -32,9 +32,6 @@ const submit = () => {
             <div class="bg-white dark:bg-slate-800 shadow-xl rounded-2xl border border-slate-200 dark:border-slate-700/50 p-8">
                 <form @submit.prevent="submit" class="space-y-6">
                     <div class="mt-4">
-                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                            Structures de rattachement
-                        </label>
                         <div class="mt-6">
                             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
                                 Structures de rattachement
@@ -91,7 +88,7 @@ const submit = () => {
                         </select>
                         <p class="mt-1 text-xs text-slate-500">Les administrateurs peuvent gérer les utilisateurs et voir tous les tickets.</p>
                     </div>
-                    <div class="col-span-full">
+                    <!-- <div class="col-span-full">
                         <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Structures de rattachement</label>
                         <div class="grid grid-cols-2 gap-4">
                             <div v-for="struct in structures" :key="struct.id" class="flex items-center">
@@ -104,7 +101,7 @@ const submit = () => {
                                 <label class="ml-2 text-sm text-slate-900 dark:text-slate-300">{{ struct.name }}</label>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                     <div>
                         <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Mot de passe temporaire</label>
                         <input type="password" v-model="form.password" class="px-5 mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5 shadow-sm focus:ring-blue-600" required placeholder="Minimum 8 caractères" />
