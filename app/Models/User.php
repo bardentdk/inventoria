@@ -58,7 +58,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Ticket::class);
     }
-
+    public function structures() {
+        return $this->belongsToMany(Structure::class);
+    }
     /**
      * Un utilisateur peut avoir plusieurs matériels assignés.
      */

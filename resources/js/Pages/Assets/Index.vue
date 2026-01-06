@@ -11,6 +11,7 @@ import debounce from 'lodash/debounce';
 const props = defineProps({
     assets: Object,
     filters: Object,
+    structures: Array,
 });
 // Formulaire pour l'upload
 const importForm = useForm({
@@ -24,33 +25,42 @@ const triggerImport = () => {
 };
 
 const handleImport = (event) => {
-    console.log("1. Événement déclenché !"); // <--- Vérifie si ça s'affiche
+    // console.log("1. Événement déclenché !"); 
 
     const file = event.target.files[0];
     if (!file) {
-        console.log("2. Aucun fichier détecté");
+        // console.log("2. Aucun fichier détecté");
         return;
     }
-    console.log("3. Fichier trouvé :", file.name);
+    // console.log("3. Fichier trouvé :", file.name);
 
     importForm.file = file;
 
     // On force l'envoi en FormData (important pour les fichiers)
     importForm.post(route('assets.import'), {
-        forceFormData: true, // <--- AJOUTE CETTE LIGNE
+        forceFormData: true,
         onSuccess: () => {
-            console.log("4. Succès Inertia");
+            // console.log("4. Succès Inertia");
             fileInput.value.value = '';
             importForm.reset();
         },
         onError: (errors) => {
-            console.log("5. Erreur Inertia :", errors); // <--- Très utile pour voir les erreurs de validation
+            console.log("5. Erreur Inertia :", errors);
         },
         onFinish: () => importForm.reset(),
     });
 };
 // Recherche réactive
-const search = ref(props.filters.search);
+const search = ref(props.filters.search || '');
+const selectedStructure = ref(props.filters.structure || '');
+
+// Fonction de filtrage unifiée
+const filter = () => {
+    router.get(route('assets.index'), { 
+        search: search.value,
+        structure: selectedStructure.value 
+    }, { preserveState: true, replace: true });
+};
 
 watch(search, debounce((value) => {
     router.get(route('assets.index'), { search: value }, { preserveState: true, replace: true });
@@ -97,7 +107,7 @@ const destroyAllAssets = () => {
                 <p class="mt-2 text-sm text-slate-500">Gérez l'ensemble du parc informatique.</p>
             </div>
             <div class="mt-4 sm:mt-0 flex gap-4">
-                <a :href="route('assets.export', { search: search })"
+                <a :href="route('assets.export', { search: search, structure: selectedStructure })"
                     class="flex items-center gap-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 px-4 py-2 rounded-lg font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition shadow-sm">
                     <ArrowDownTrayIcon class="w-5 h-5" />
                     Exporter CSV
@@ -116,21 +126,39 @@ const destroyAllAssets = () => {
                     <PlusIcon class="w-5 h-5" />
                     Ajouter
                 </Link>
-                <button v-if="$page.props.auth.user.role === 'admin'" @click="confirmDestroyAllOpen = true"
-                    class="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 px-4 py-2 rounded-lg font-medium hover:bg-red-100 dark:hover:bg-red-900/40 transition shadow-sm ml-2">
-                    <TrashIcon class="w-5 h-5" />
-                    <span class="hidden sm:inline">Tout Vider</span>
-                </button>
+                <template v-if="props.assets">
+                    <button v-if="$page.props.auth.user.role === 'admin'" @click="confirmDestroyAllOpen = true"
+                        class="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 px-4 py-2 rounded-lg font-medium hover:bg-red-100 dark:hover:bg-red-900/40 transition shadow-sm ml-2">
+                        <TrashIcon class="w-5 h-5" />
+                        <span class="hidden sm:inline">Tout Vider</span>
+                    </button>
+                </template>
             </div>
         </div>
 
         <div class="mb-6">
-            <div class="relative max-w-sm">
-                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                    <MagnifyingGlassIcon class="h-5 w-5 text-slate-400" />
+            <div class="flex flex-col sm:flex-row gap-4 mb-6">
+                <div class="relative flex-1">
+                    <input 
+                        v-model="search" 
+                        @keyup.enter="filter"
+                        type="text" 
+                        placeholder="Rechercher (Nom, Série, Code)..."
+                        class="block w-full rounded-xl border-0 py-2.5 px-4 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-700 dark:text-white"
+                    /> 
                 </div>
-                <input v-model="search" type="text" placeholder="Rechercher (Nom, Série, Code)..."
-                    class="block w-full rounded-xl border-0 py-2.5 pl-10 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-700 dark:text-white" />
+
+                <select 
+                    v-model="selectedStructure" 
+                    @change="filter"
+                    class="rounded-lg border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white focus:ring-blue-500"
+                >
+                    <option value="">Toutes les structures</option>
+                    <option v-for="struct in structures" :key="struct.id" :value="struct.id">
+                        {{ struct.name }}
+                    </option>
+                </select>
+
             </div>
         </div>
 
@@ -149,6 +177,9 @@ const destroyAllAssets = () => {
                             <th scope="col"
                                 class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                                 Catégorie</th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                Structure</th>
                             <th scope="col"
                                 class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                                 Statut</th>
@@ -181,6 +212,14 @@ const destroyAllAssets = () => {
                                     {{ asset.category.name }}
                                 </span>
                             </td>
+                            
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span v-if="asset.structure" class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-900/30 dark:text-blue-300 dark:ring-blue-500/30">
+                                    {{ asset.structure.name }}
+                                </span>
+                                <span v-else class="text-slate-400 italic text-xs">--</span>
+                            </td>
+
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span
                                     :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize', getStatusColor(asset.status)]">
@@ -203,7 +242,7 @@ const destroyAllAssets = () => {
                             </td>
                         </tr>
                         <tr v-if="assets.data.length === 0">
-                            <td colspan="5" class="px-6 py-10 text-center text-slate-500">
+                            <td colspan="6" class="px-6 py-10 text-center text-slate-500">
                                 Aucun matériel trouvé.
                             </td>
                         </tr>

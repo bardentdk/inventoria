@@ -54,6 +54,7 @@ const deleteUser = (user) => {
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Utilisateur</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Rôle</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Structures</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Date création</th>
                         <th class="relative px-6 py-3"><span class="sr-only">Actions</span></th>
                     </tr>
@@ -81,6 +82,19 @@ const deleteUser = (user) => {
                                 {{ user.role === 'admin' ? 'Administrateur' : 'Utilisateur' }}
                             </span>
                         </td>
+                        
+                        <td class="px-6 py-4">
+                            <div class="flex flex-wrap gap-1">
+                                <span v-for="struct in user.structures" :key="struct.id" 
+                                    class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-900/30 dark:text-blue-300 dark:ring-blue-500/30">
+                                    {{ struct.name }}
+                                </span>
+                                <span v-if="!user.structures || user.structures.length === 0" class="text-slate-400 text-xs italic">
+                                    --
+                                </span>
+                            </div>
+                        </td>
+
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                             {{ new Date(user.created_at).toLocaleDateString() }}
                         </td>

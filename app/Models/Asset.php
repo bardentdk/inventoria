@@ -18,9 +18,12 @@ class Asset extends Model
         'category_id',
         'user_id',
         'status',
-        'specs'
+        'specs', 
+        'structure_id',
     ];
-
+    public function structure() {
+        return $this->belongsTo(Structure::class);
+    }
     public function category()
     {
         return $this->belongsTo(Category::class);

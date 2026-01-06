@@ -4,6 +4,7 @@ import { Head, useForm, Link } from '@inertiajs/vue3';
 
 const props = defineProps({
     user: Object,
+    structures:Array,
 });
 
 // On pré-remplit le formulaire avec les données existantes
@@ -12,6 +13,7 @@ const form = useForm({
     email: props.user.email,
     role: props.user.role,
     password: '', // Vide par défaut
+    structures: props.user.structures ? props.user.structures.map(s => s.id) : [],
 });
 
 const submit = () => {
@@ -28,6 +30,41 @@ const submit = () => {
 
             <div class="bg-white dark:bg-slate-800 shadow rounded-2xl border border-slate-200 dark:border-slate-700/50 p-8">
                 <form @submit.prevent="submit" class="space-y-6">
+                    <div class="mt-6">
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+                            Structures de rattachement
+                        </label>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            
+                            <div v-for="struct in structures" :key="struct.id" class="relative flex items-start">
+                                <div class="flex h-6 items-center">
+                                    <input 
+                                        type="checkbox" 
+                                        :id="'struct-' + struct.id"
+                                        :value="struct.id" 
+                                        v-model="form.structures"
+                                        class="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-600 dark:bg-slate-900 dark:border-slate-600 transition duration-150 ease-in-out"
+                                    >
+                                </div>
+                                
+                                <div class="ml-3 text-sm leading-6 w-full">
+                                    <label 
+                                        :for="'struct-' + struct.id" 
+                                        class="font-medium text-slate-900 dark:text-white block p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-200 select-none shadow-sm peer-checked:border-blue-600 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/20"
+                                        :class="{ 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 ring-1 ring-blue-500': form.structures.includes(struct.id) }"
+                                    >
+                                        {{ struct.name }}
+                                    </label>
+                                </div>
+                            </div>
+
+                        </div>
+                        
+                        <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                            Cochez toutes les structures où cet utilisateur intervient.
+                        </p>
+                    </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Nom complet</label>
                         <input type="text" v-model="form.name" class="px-5 mt-2 block w-full rounded-xl border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-white py-2.5" required />

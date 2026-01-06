@@ -5,7 +5,7 @@ import { ref } from 'vue';
 import {
     ComputerDesktopIcon, QrCodeIcon, UserCircleIcon, PencilSquareIcon,
     WrenchScrewdriverIcon, CheckBadgeIcon, ArrowRightStartOnRectangleIcon,
-    ArrowLeftEndOnRectangleIcon, ClockIcon
+    ArrowLeftEndOnRectangleIcon, ClockIcon, BuildingOfficeIcon
 } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
@@ -93,10 +93,16 @@ const getStatusColor = (status) => {
                             {{ asset.status }}
                         </span>
                     </h1>
-                    <p class="text-slate-500 text-sm mt-1 flex items-center gap-4">
+                    <div class="text-slate-500 text-sm mt-1 flex flex-wrap items-center gap-4">
                         <span class="flex items-center gap-1"><QrCodeIcon class="w-4 h-4" /> {{ asset.inventory_code }}</span>
                         <span>S/N: {{ asset.serial_number }}</span>
-                    </p>
+                        
+                        <span v-if="asset.structure" class="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-medium">
+                            <BuildingOfficeIcon class="w-4 h-4" /> 
+                            {{ asset.structure.name }}
+                        </span>
+                        <span v-else class="text-slate-400 italic">Non rattaché à une structure</span>
+                    </div>
                 </div>
             </div>
 
@@ -172,8 +178,13 @@ const getStatusColor = (status) => {
 
             <div class="lg:col-span-2 space-y-8">
                  <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/50 p-6">
-                    <h3 class="font-bold text-slate-900 dark:text-white mb-2">Configuration</h3>
-                    <p class="text-slate-600 dark:text-slate-400 text-sm">{{ asset.specs || 'N/A' }}</p>
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-slate-900 dark:text-white">Configuration</h3>
+                        <span v-if="asset.structure" class="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                            {{ asset.structure.name }}
+                        </span>
+                    </div>
+                    <p class="text-slate-600 dark:text-slate-400 text-sm whitespace-pre-line">{{ asset.specs || 'Aucune spécification technique renseignée.' }}</p>
                 </div>
 
                 <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/50 overflow-hidden">

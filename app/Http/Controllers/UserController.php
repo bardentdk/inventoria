@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Structure;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -13,16 +14,18 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        // Sécurité basique : Si pas admin, on vire (ou via Middleware)
         if ($request->user()->role !== 'admin') {
             abort(403, 'Accès réservé aux administrateurs.');
         }
 
-        $query = User::query();
+        // AJOUT : on charge 'structures' pour pouvoir afficher les badges dans le tableau
+        $query = User::query()->with('structures');
 
         if ($request->search) {
-            $query->where('name', 'like', '%'.$request->search.'%')
+            $query->where(function($q) use ($request) {
+                $q->where('name', 'like', '%'.$request->search.'%')
                   ->orWhere('email', 'like', '%'.$request->search.'%');
+            });
         }
 
         return Inertia::render('Users/Index', [
@@ -33,7 +36,9 @@ class UserController extends Controller
 
     public function create()
     {
-        return Inertia::render('Users/Create');
+        return Inertia::render('Users/Create', [
+            'structures' => Structure::all(),
+        ]);
     }
 
     public function store(Request $request)
@@ -43,9 +48,11 @@ class UserController extends Controller
             'email' => 'required|email|unique:users,email',
             'role' => 'required|in:admin,user',
             'password' => 'required|min:8',
+            // AJOUT VALIDATION STRUCTURES
+            'structures' => 'nullable|array', 
+            'structures.*' => 'exists:structures,id', // Vérifie que chaque ID existe
         ]);
 
-        // 1. Création de l'utilisateur (On hashe le mot de passe pour la BDD)
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
@@ -53,12 +60,13 @@ class UserController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
-        // 2. Envoi de la notification avec le mot de passe EN CLAIR (celui du formulaire)
-        // On utilise try/catch pour ne pas bloquer la création si Brevo échoue
+        // CORRECTION : On utilise input(..., []) pour gérer le cas vide proprement
+        $user->structures()->sync($request->input('structures', []));
+
         try {
             $user->notify(new AccountCreated($validated['password']));
         } catch (\Exception $e) {
-            // Optionnel : Loguer l'erreur mais laisser passer
+            // Log silent
         }
 
         return redirect()->route('users.index')->with('success', 'Utilisateur créé et notifié par email.');
@@ -66,8 +74,10 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
+        $user->load('structures');
         return Inertia::render('Users/Edit', [
-            'user' => $user
+            'user' => $user,
+            'structures' => Structure::all(),
         ]);
     }
 
@@ -77,7 +87,10 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => ['required', 'email', Rule::unique('users')->ignore($user->id)],
             'role' => 'required|in:admin,user',
-            'password' => 'nullable|min:8', // Optionnel en update
+            'password' => 'nullable|min:8',
+            // AJOUT VALIDATION STRUCTURES
+            'structures' => 'nullable|array',
+            'structures.*' => 'exists:structures,id',
         ]);
 
         $user->name = $validated['name'];
@@ -90,12 +103,15 @@ class UserController extends Controller
 
         $user->save();
 
+        // IMPORTANT : Utiliser sync avec input() par défaut tableau vide
+        // Cela permet de tout détacher si l'admin décoche tout.
+        $user->structures()->sync($request->input('structures', []));
+
         return redirect()->route('users.index')->with('success', 'Profil mis à jour.');
     }
 
     public function destroy(User $user)
     {
-        // On empêche l'admin de se supprimer lui-même
         if ($user->id === auth()->id()) {
             return back()->with('error', 'Vous ne pouvez pas supprimer votre propre compte.');
         }

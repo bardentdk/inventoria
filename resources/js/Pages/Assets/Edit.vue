@@ -8,6 +8,7 @@ import { ExclamationTriangleIcon, TrashIcon } from '@heroicons/vue/24/outline';
 const props = defineProps({
     asset: Object,
     categories: Array,
+    structures: Array,
 });
 
 const form = useForm({
@@ -17,6 +18,8 @@ const form = useForm({
     category_id: props.asset.category_id,
     status: props.asset.status,
     specs: props.asset.specs,
+    // CORRECTION ICI : On utilise structure_id (singulier) et non un tableau
+    structure_id: props.asset.structure_id, 
 });
 
 const submit = () => {
@@ -31,7 +34,6 @@ const isDeleting = ref(false);
 const confirmDelete = () => {
     if (deleteConfirmationText.value.toLowerCase() === 'supprimer') {
         isDeleting.value = true;
-        // On utilise router.delete pour une action directe
         router.delete(route('assets.destroy', props.asset.id));
     }
 };
@@ -144,6 +146,63 @@ const confirmDelete = () => {
                             <option value="repair">En réparation</option>
                             <option value="broken">Hors Service (HS)</option>
                         </select>
+                    </div>
+
+                    <div class="mt-6">
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+                            Structure de rattachement
+                        </label>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            
+                            <div class="relative flex items-start">
+                                <div class="flex h-6 items-center">
+                                    <input 
+                                        type="radio" 
+                                        id="struct-none"
+                                        :value="null" 
+                                        v-model="form.structure_id"
+                                        class="h-5 w-5 border-slate-300 text-blue-600 focus:ring-blue-600 dark:bg-slate-900 dark:border-slate-600"
+                                    >
+                                </div>
+                                <div class="ml-3 text-sm leading-6 w-full">
+                                    <label 
+                                        for="struct-none" 
+                                        class="font-medium text-slate-900 dark:text-white block p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200 select-none shadow-sm"
+                                        :class="{ 'border-slate-500 bg-slate-50 dark:bg-slate-800 ring-1 ring-slate-500': form.structure_id === null }"
+                                    >
+                                        Aucune (Non rattaché)
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div v-for="struct in structures" :key="struct.id" class="relative flex items-start">
+                                <div class="flex h-6 items-center">
+                                    <input 
+                                        type="radio" 
+                                        :id="'struct-' + struct.id"
+                                        :value="struct.id" 
+                                        v-model="form.structure_id"
+                                        class="h-5 w-5 border-slate-300 text-blue-600 focus:ring-blue-600 dark:bg-slate-900 dark:border-slate-600"
+                                    >
+                                </div>
+                                
+                                <div class="ml-3 text-sm leading-6 w-full">
+                                    <label 
+                                        :for="'struct-' + struct.id" 
+                                        class="font-medium text-slate-900 dark:text-white block p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-200 select-none shadow-sm"
+                                        :class="{ 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 ring-1 ring-blue-500': form.structure_id === struct.id }"
+                                    >
+                                        {{ struct.name }}
+                                    </label>
+                                </div>
+                            </div>
+
+                        </div>
+                        
+                        <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                            Sélectionnez la structure propriétaire de ce matériel.
+                        </p>
                     </div>
 
                     <div>

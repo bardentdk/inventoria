@@ -6,6 +6,7 @@ use App\Models\Asset;
 use App\Imports\AssetsImport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Models\Category;
+use App\Models\Structure;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -14,7 +15,7 @@ class AssetController extends Controller
     public function index(Request $request)
     {
         // Récupération avec Recherche et Pagination
-        $query = Asset::query()->with('category');
+        $query = Asset::query()->with('category', 'user', 'structure');
 
         if ($request->input('search')) {
             $query->where(function($q) use ($request) {
@@ -23,7 +24,10 @@ class AssetController extends Controller
                   ->orWhere('serial_number', 'like', '%'.$request->input('search').'%');
             });
         }
-
+        // --- NOUVEAU FILTRE STRUCTURE ---
+        if ($request->structure) {
+            $query->where('structure_id', $request->structure);
+        }
         // Filtre par statut (optionnel, pour plus tard)
         if ($request->input('status')) {
             $query->where('status', $request->input('status'));
@@ -31,7 +35,8 @@ class AssetController extends Controller
 
         return Inertia::render('Assets/Index', [
             'assets' => $query->latest()->paginate(10)->withQueryString(),
-            'filters' => $request->only(['search', 'status']),
+            'filters' => $request->only(['search', 'status', 'structure']),
+            'structures' => \App\Models\Structure::all(),
         ]);
     }
 
@@ -39,6 +44,7 @@ class AssetController extends Controller
     {
         return Inertia::render('Assets/Create', [
             'categories' => Category::all(),
+            'structures' => Structure::all(),
             // On ajoute la liste des utilisateurs pour le select
             'users' => \App\Models\User::orderBy('name')->get(['id', 'name'])
         ]);
@@ -55,6 +61,7 @@ class AssetController extends Controller
             'specs' => 'nullable|string',
             // Validation conditionnelle : user_id est requis SI le statut est 'assigned'
             'user_id' => 'required_if:status,assigned|nullable|exists:users,id',
+            'structure_id' => 'nullable|exists:structures,id'
         ]);
 
         // 1. Création du matériel
@@ -64,19 +71,20 @@ class AssetController extends Controller
             'inventory_code' => $validated['inventory_code'],
             'category_id' => $validated['category_id'],
             'status' => $validated['status'],
-            'specs' => $validated['specs'],
+            'specs' => $validated['specs'] ?? null, // Utilisation de ?? null par sécurité
             // Si assigné, on lie directement, sinon null
-            'user_id' => $validated['status'] === 'assigned' ? $validated['user_id'] : null,
+            'user_id' => $validated['status'] === 'assigned' ? ($validated['user_id'] ?? null) : null,
+            // On récupère la structure ou null si non définie
+            'structure_id' => $validated['structure_id'] ?? null, 
         ]);
 
         // 2. Si on l'a assigné immédiatement, on crée l'historique (AssetAssignment)
-        // pour garder une trace propre dans la Timeline
-        if ($validated['status'] === 'assigned' && $request->user_id) {
+        if ($validated['status'] === 'assigned' && !empty($validated['user_id'])) {
             \App\Models\AssetAssignment::create([
                 'asset_id' => $asset->id,
                 'user_id' => $validated['user_id'],
                 'admin_id' => auth()->id(),
-                'assigned_at' => now(), // Date du jour
+                'assigned_at' => now(),
                 'comments' => 'Assignation initiale à la création du matériel.',
             ]);
         }
@@ -111,6 +119,7 @@ class AssetController extends Controller
     {
         return Inertia::render('Assets/Edit', [
             'asset' => $asset,
+            'structures' => Structure::all(),
             'categories' => Category::all() // On a besoin de la liste pour le menu déroulant
         ]);
     }
@@ -124,10 +133,20 @@ class AssetController extends Controller
             'inventory_code' => 'required|unique:assets,inventory_code,' . $asset->id,
             'category_id' => 'required|exists:categories,id',
             'status' => 'required|in:available,assigned,broken,repair',
-            'specs' => 'nullable|string'
+            'specs' => 'nullable|string',
+            'structure_id' => 'nullable|exists:structures,id'
         ]);
 
-        $asset->update($validated);
+        // Mise à jour propre
+        $asset->update([
+            'name' => $validated['name'],
+            'serial_number' => $validated['serial_number'],
+            'inventory_code' => $validated['inventory_code'],
+            'category_id' => $validated['category_id'],
+            'status' => $validated['status'],
+            'specs' => $validated['specs'] ?? null,
+            'structure_id' => $validated['structure_id'] ?? null,
+        ]);
 
         return redirect()->route('assets.index')->with('success', 'Matériel mis à jour.');
     }
@@ -135,9 +154,10 @@ class AssetController extends Controller
     {
         $filename = 'inventaire-nexa-' . date('Y-m-d-H-i') . '.csv';
 
-        // On reprend les mêmes filtres que l'index pour exporter ce qu'on voit (ou tout si pas de filtre)
-        $query = Asset::query()->with(['category', 'user']);
+        // 1. On charge la relation 'structure' pour l'afficher dans le CSV
+        $query = Asset::query()->with(['category', 'user', 'structure']);
 
+        // 2. On applique le filtre de Recherche
         if ($request->search) {
             $query->where(function($q) use ($request) {
                 $q->where('name', 'like', '%'.$request->search.'%')
@@ -146,7 +166,13 @@ class AssetController extends Controller
             });
         }
 
-        // Headers HTTP pour forcer le téléchargement
+        // 3. IMPORTANT : On applique le filtre Structure (comme dans l'index)
+        // Sinon l'utilisateur exporte tout même s'il a filtré une structure précise
+        if ($request->structure) {
+            $query->where('structure_id', $request->structure);
+        }
+
+        // Headers HTTP
         $headers = [
             "Content-type"        => "text/csv; charset=UTF-8",
             "Content-Disposition" => "attachment; filename=$filename",
@@ -155,17 +181,13 @@ class AssetController extends Controller
             "Expires"             => "0"
         ];
 
-        // Fonction de callback qui écrit le fichier en flux (stream)
         $callback = function() use ($query) {
             $file = fopen('php://output', 'w');
+            fputs($file, "\xEF\xBB\xBF"); // BOM UTF-8
 
-            // Astuce pour Excel : BOM UTF-8 pour les accents
-            fputs($file, "\xEF\xBB\xBF");
+            // 4. On ajoute la colonne 'Structure' dans l'entête
+            fputcsv($file, ['Nom', 'S/N', 'Code Inventaire', 'Catégorie', 'Structure', 'Statut', 'Utilisateur Actuel', 'Date Ajout'], ';');
 
-            // Ligne d'entête
-            fputcsv($file, ['Nom', 'S/N', 'Code Inventaire', 'Catégorie', 'Statut', 'Utilisateur Actuel', 'Date Ajout'], ';');
-
-            // On traite par paquets de 100 pour ne pas surcharger la RAM
             $query->chunk(100, function($assets) use ($file) {
                 foreach ($assets as $asset) {
                     fputcsv($file, [
@@ -173,6 +195,8 @@ class AssetController extends Controller
                         $asset->serial_number,
                         $asset->inventory_code,
                         $asset->category ? $asset->category->name : 'N/A',
+                        // 5. On ajoute la donnée Structure
+                        $asset->structure ? $asset->structure->name : '', 
                         $asset->status,
                         $asset->user ? $asset->user->name : 'Non assigné',
                         $asset->created_at->format('d/m/Y'),
