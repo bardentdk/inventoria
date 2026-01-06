@@ -21,17 +21,24 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Dans la méthode boot()
+        // --- ECOUTEUR DE CONNEXION ---
         Event::listen(Login::class, function ($event) {
-            $event->user->update(['last_login_at' => now(), 'last_login_ip' => request()->ip()]);
             
+            // 1. On crée une entrée dans le journal d'activité
             activity()
-                ->causer($event->user)
+                ->causedBy($event->user) // L'utilisateur qui se connecte
                 ->withProperties([
-                    'ip' => request()->ip(), 
-                    'agent' => request()->header('User-Agent')
+                    'ip' => request()->ip(),
+                    'agent' => request()->header('User-Agent'), // Le navigateur (Chrome, Firefox...)
                 ])
-                ->log('Connexion à la plateforme');
+                ->event('login') // Type d'événement
+                ->log('Connexion à la plateforme'); // Le message visible
+
+            // 2. On met aussi à jour la table users (pour avoir l'info rapidement sans fouiller les logs)
+            $event->user->updateQuietly([
+                'last_login_at' => now(),
+                'last_login_ip' => request()->ip(),
+            ]);
         });
     }
 }
