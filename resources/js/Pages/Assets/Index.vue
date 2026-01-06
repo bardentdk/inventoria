@@ -1,15 +1,53 @@
 <script setup>
+// Ajoute l'import de useForm et ArrowUpTrayIcon
+import { useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
-import { MagnifyingGlassIcon, PlusIcon, PencilSquareIcon, EyeIcon,ArrowDownTrayIcon } from '@heroicons/vue/24/outline';
+import { MagnifyingGlassIcon, PlusIcon, PencilSquareIcon, EyeIcon,ArrowDownTrayIcon, ArrowUpTrayIcon } from '@heroicons/vue/24/outline';
 import debounce from 'lodash/debounce';
 
 const props = defineProps({
     assets: Object,
     filters: Object,
 });
+// Formulaire pour l'upload
+const importForm = useForm({
+    file: null,
+});
 
+const fileInput = ref(null);
+
+const triggerImport = () => {
+    fileInput.value.click();
+};
+
+const handleImport = (event) => {
+    console.log("1. Événement déclenché !"); // <--- Vérifie si ça s'affiche
+    
+    const file = event.target.files[0];
+    if (!file) {
+        console.log("2. Aucun fichier détecté");
+        return;
+    }
+    console.log("3. Fichier trouvé :", file.name);
+
+    importForm.file = file;
+    
+    // On force l'envoi en FormData (important pour les fichiers)
+    importForm.post(route('assets.import'), {
+        forceFormData: true, // <--- AJOUTE CETTE LIGNE
+        onSuccess: () => {
+            console.log("4. Succès Inertia");
+            fileInput.value.value = ''; 
+            importForm.reset();
+        },
+        onError: (errors) => {
+            console.log("5. Erreur Inertia :", errors); // <--- Très utile pour voir les erreurs de validation
+        },
+        onFinish: () => importForm.reset(),
+    });
+};
 // Recherche réactive
 const search = ref(props.filters.search);
 
@@ -42,6 +80,23 @@ const getStatusColor = (status) => {
                     <ArrowDownTrayIcon class="w-5 h-5" />
                     Exporter CSV
                 </a>
+                <input 
+                    type="file" 
+                    ref="fileInput" 
+                    class="hidden" 
+                    accept=".csv, .xlsx" 
+                    @change="handleImport" 
+                />
+
+                <button 
+                    @click="triggerImport" 
+                    :disabled="importForm.processing"
+                    class="flex items-center gap-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 px-4 py-2 rounded-lg font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition shadow-sm disabled:opacity-50"
+                >
+                    <ArrowUpTrayIcon v-if="!importForm.processing" class="w-5 h-5" />
+                    <span v-else class="w-5 h-5 border-2 border-slate-500 border-t-transparent rounded-full animate-spin"></span>
+                    Importer
+                </button>
                 <Link :href="route('assets.create')" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium shadow-lg shadow-blue-500/30 transition-all">
                     <PlusIcon class="w-5 h-5" />
                     Ajouter

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Asset;
+use App\Imports\AssetsImport;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -187,5 +189,32 @@ class AssetController extends Controller
     {
         $asset->delete();
         return redirect()->route('assets.index')->with('success', 'Matériel supprimé de l\'inventaire.');
+    }
+    public function import(Request $request)
+    {
+        // 1. Validation
+        // On garde 'txt' pour la tolérance, au cas où
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv,txt',
+        ]);
+
+        try {
+            // 2. On lance l'import RÉEL (plus de dd)
+            Excel::import(new AssetsImport, $request->file('file'));
+
+            // 3. Message de succès
+            return back()->with('success', 'Importation réussie ! Votre inventaire est à jour.');
+
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            // Erreur précise (ex: Numéro de série déjà pris)
+            $failures = $e->failures();
+            $errorMsg = 'Erreur ligne ' . $failures[0]->row() . ' : ' . $failures[0]->errors()[0];
+            
+            return back()->with('error', $errorMsg);
+
+        } catch (\Exception $e) {
+            // Erreur technique générale
+            return back()->with('error', 'Erreur lors de l\'import : ' . $e->getMessage());
+        }
     }
 }

@@ -63,6 +63,7 @@ Route::middleware('auth')->group(function () {
     // Gestion des Attributions
     Route::post('assets/{asset}/assign', [App\Http\Controllers\AssetAssignmentController::class, 'store'])->name('assets.assign');
     Route::post('assets/{asset}/return', [App\Http\Controllers\AssetAssignmentController::class, 'markAsReturned'])->name('assets.return');
+    Route::post('assets/import', [AssetController::class, 'import'])->name('assets.import');
     #Création des catégories
     Route::post('api/categories', [CategoryController::class, 'storeApi'])->name('categories.store.api');
 
